@@ -9,7 +9,8 @@ from selenium.common.exceptions import StaleElementReferenceException
 import json
 
 
-def fetch_tweets(url, days=30):
+def get_tweets(username, days=30):
+    url = f"https://twitter.com/{username}"
     # Path to your Chrome profile
     chrome_profile_path = os.path.expanduser('~/.config/google-chrome/Profile')
 
@@ -58,10 +59,10 @@ def fetch_tweets(url, days=30):
 
                 # Check if the tweet date is within the specified range
                 if tweet_date and tweet_date < cutoff_date:
-                    print(f"Reached tweets older than {days} days.")
-                    # Print the collected tweets in JSON format
-                    for tweet in tweets_data:
-                        print(json.dumps(tweet, indent=4, default=str))
+                    # print(f"Reached tweets older than {days} days.")
+                    # # Print the collected tweets in JSON format
+                    # for tweet in tweets_data:
+                    #     print(json.dumps(tweet, indent=4, default=str))
 
                     # or add into database
 
@@ -69,7 +70,7 @@ def fetch_tweets(url, days=30):
                     input("Press Enter to close the browser...")
                     # Close the browser
                     driver.quit()
-                    return
+                    return tweet_date
 
                 # Extract hashtags
                 hashtags = [part for part in tweet_text.split() if part.startswith('#')]
@@ -111,7 +112,6 @@ def fetch_tweets(url, days=30):
         last_height = new_height
 
 
-username = input("Enter username: ")
-days = int(input("Enter the number of days to fetch tweets for: "))
-url = f"https://twitter.com/{username}"
-fetch_tweets(url, days)
+# username = input("Enter username: ")
+# days = int(input("Enter the number of days to fetch tweets for: "))
+# fetch_tweets(username, days)

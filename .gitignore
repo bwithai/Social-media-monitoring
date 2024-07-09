@@ -2,3 +2,10 @@
 .venv
 __pycache__
 __pycache__/
+git-hub
+https
+server.key
+server.csr
+server.crt
+server.cnf
+test.py
