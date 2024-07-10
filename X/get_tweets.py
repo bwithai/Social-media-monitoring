@@ -1,4 +1,5 @@
 import os
+import pprint
 import time
 from datetime import datetime, timedelta
 from selenium import webdriver
@@ -7,6 +8,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import StaleElementReferenceException
 import json
+
+from utils import clean_tweet_text
 
 
 def get_tweets(username, days=30):
@@ -45,7 +48,8 @@ def get_tweets(username, days=30):
 
                 # Filter out unnecessary images
                 tweet_images = [img.get_attribute('src') for img in images if
-                                'emoji' not in img.get_attribute('src')] # and 'profile_images' not in img.get_attribute('src')]
+                                'emoji' not in img.get_attribute(
+                                    'src')]  # and 'profile_images' not in img.get_attribute('src')]
 
                 # Get video URLs
                 tweet_videos = [video.get_attribute('src') for video in videos if video.get_attribute('src')]
@@ -59,18 +63,17 @@ def get_tweets(username, days=30):
 
                 # Check if the tweet date is within the specified range
                 if tweet_date and tweet_date < cutoff_date:
-                    # print(f"Reached tweets older than {days} days.")
+                    print(f"Reached tweets older than {days} days.")
                     # # Print the collected tweets in JSON format
                     # for tweet in tweets_data:
                     #     print(json.dumps(tweet, indent=4, default=str))
 
                     # or add into database
-
-
-                    input("Press Enter to close the browser...")
+                    # input("Press Enter to close the browser...")
                     # Close the browser
+                    time.sleep(2)
                     driver.quit()
-                    return tweet_date
+                    return tweets_data
 
                 # Extract hashtags
                 hashtags = [part for part in tweet_text.split() if part.startswith('#')]
@@ -85,7 +88,7 @@ def get_tweets(username, days=30):
                 pinned = 'Pinned' in tweet_text
 
                 tweet_data = {
-                    'text': tweet_text,
+                    'tweet': clean_tweet_text(tweet_text),
                     'images': tweet_images,
                     'videos': tweet_videos,
                     'date': tweet_date,
@@ -110,8 +113,21 @@ def get_tweets(username, days=30):
         if new_height == last_height:
             break
         last_height = new_height
-
+    #
+    # # Print the collected tweets in JSON format
+    # for tweet in tweets_data:
+    #     print(json.dumps(tweet, indent=4, default=str))
+    #
+    # # or add into database
+    #
+    #
+    # input("Press Enter to close the browser...")
+    # # Close the browser
+    # driver.quit()
+    # return tweets_data
 
 # username = input("Enter username: ")
 # days = int(input("Enter the number of days to fetch tweets for: "))
 # fetch_tweets(username, days)
+
+# pprint.pprint(get_tweets('Jalalhaddad', 2))
