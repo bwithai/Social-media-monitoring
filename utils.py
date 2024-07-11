@@ -1,6 +1,17 @@
 import json
 import os
 from bson import ObjectId
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
+def get_database_url():
+    username = os.environ["BD_USERNAME"]
+    password = os.environ["DB_PASSWORD"]
+    cluster_url = os.environ["MONGO_URI"]
+    url = f"mongodb+srv://{username}:{password}@{cluster_url}"
+    return url
 
 
 def serialize_object_id(dic):
@@ -66,11 +77,6 @@ def clean_tweet_text(tweet_text):
         tweet['tweet_text'] = '\n'.join(lines[5:to])
 
     return tweet
-
-
-def get_database_url():
-    url = "mongodb+srv://tika:tik@cluster0.g7xf0kd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-    return url
 
 
 def save_json_file(system_info):
