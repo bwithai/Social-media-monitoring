@@ -21,12 +21,11 @@ async def fetch_tweets(request: X_Schema):
     try:
         tweet_data = get_tweets(username=request.username, days=request.days)
         if tweet_data:
-            x_collection.insert_many(tweet_data)
             if tweet_data:
-                # x_collection.insert_many(tweet_data)
-                # return JSONResponse(content={"message": f"{request.days} days of tweet has been saved to Database"},
-                #                     status_code=200)
-                return JSONResponse(content={"tweets": json.dumps(tweet_data, default=json_default)}, status_code=200)
+                x_collection.insert_many(tweet_data)
+                return JSONResponse(content={"message": f"{request.days} days of tweet has been saved to Database"},
+                                    status_code=200)
+                # return JSONResponse(content={"tweets": json.dumps(tweet_data, default=json_default)}, status_code=200)
             else:
                 return JSONResponse(content={"Message": "Scraping Failed"}, status_code=500)
     except Exception as e:

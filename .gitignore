@@ -10,3 +10,4 @@ server.crt
 server.cnf
 test.py
 try.py
+.env
