@@ -101,6 +101,66 @@ def clean_tweet_text(tweet_text):
     return tweet
 
 
+def is_digit(likes):
+    try:
+        int(likes)
+        return True
+    except ValueError:
+        return False
+
+
+def clean_fb_post_text(post_text):
+    lines = post_text.split('\n')
+    post = {}
+    likes = ""
+    comments = ""
+    shares = ""
+
+    from_idx: int = 0
+    to_idx: int = 0
+    who_commented: int = 0
+    comment_end: int = 0
+
+    for idx, line in enumerate(lines):
+        if line.strip() == "·":
+            from_idx = idx + 1
+        if line.strip() == "All reactions:":
+            to_idx = idx - 1
+        if line.strip() == "View more comments":
+            who_commented = idx + 1
+        if line.strip() == "Like":
+            if lines[idx + 1].strip() == "Reply":
+                comment_end = idx
+
+    description = lines[from_idx:to_idx]
+    likes = lines[to_idx + 2].strip()
+    if is_digit(likes):
+        likes = likes + " likes"
+    if "comments" in lines[to_idx + 4].strip():
+        comments = lines[to_idx + 4].strip()
+    if "shares" in lines[to_idx + 5]:
+        shares = lines[to_idx + 5]
+
+    description_text: str = ""
+    for d in description:
+        description_text += d
+
+    post['post_text'] = description_text
+    post['engagement'] = {
+        'likes': likes,
+        'comments': comments,
+        'shares': shares
+    }
+    person_comment = lines[who_commented + 1:comment_end]
+    person_comment_text = ""
+    for t in person_comment:
+        person_comment_text += t
+    post['display_comment'] = lines[
+                                  who_commented].strip() + " commented to say " + f'{person_comment_text}'
+
+    return post
+
+
 def save_json_file(system_info):
     # Save the system_info dictionary as a JSON file
     with open(get_path('system_info.json'), 'w') as json_file:

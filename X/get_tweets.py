@@ -113,18 +113,11 @@ def get_tweets(username, days=30):
         if new_height == last_height:
             break
         last_height = new_height
-    #
-    # # Print the collected tweets in JSON format
-    # for tweet in tweets_data:
-    #     print(json.dumps(tweet, indent=4, default=str))
-    #
-    # # or add into database
-    #
-    #
-    # input("Press Enter to close the browser...")
-    # # Close the browser
-    # driver.quit()
-    # return tweets_data
+
+    # Return the collected tweets if end tweet before that date JSON format
+    # Close the browser
+    driver.quit()
+    return tweets_data
 
 # username = input("Enter username: ")
 # days = int(input("Enter the number of days to fetch tweets for: "))

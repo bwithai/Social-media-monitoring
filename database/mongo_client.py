@@ -15,6 +15,7 @@ x_collection = db["X"]
 # x_collection.insert_one({"test": "ing"})
 insta_collection = db["instagram"]
 tiktok_collection = db["tiktok"]
+fb_collection = db["facebook"]
 user_collection = db["user"]
 
 

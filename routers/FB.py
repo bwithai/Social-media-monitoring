@@ -1,14 +1,14 @@
-import json
 from datetime import datetime
 
 from fastapi import APIRouter
 from pymongo.errors import ServerSelectionTimeoutError, ConnectionFailure
 from starlette.responses import JSONResponse
-from schemas import UnameDay_Schema
-from X.get_tweets import get_tweets
-from database.mongo_client import x_collection
 
-x_router = APIRouter(prefix="/v1-X", tags=["X (Twitter)"])
+from FB.get_posts import get_fb_posts
+from schemas import UnameDay_Schema
+from database.mongo_client import fb_collection
+
+fb_router = APIRouter(prefix="/v1-FB", tags=["Facebook"])
 
 
 def json_default(obj):
@@ -17,14 +17,14 @@ def json_default(obj):
     raise TypeError
 
 
-@x_router.post('/fetch-tweets')
-async def fetch_tweets(request: UnameDay_Schema):
+@fb_router.post('/fetch-fb-posts')
+async def fetch_fb_post(request: UnameDay_Schema):
     try:
-        tweet_data = get_tweets(username=request.username, days=request.days)
-        if tweet_data:
+        post_data = get_fb_posts(username=request.username, days=request.days)
+        if post_data:
             try:
-                x_collection.insert_many(tweet_data)
-                return JSONResponse(content={"message": f"{request.days} post(s) have been saved to Database"},
+                fb_collection.insert_many(post_data)
+                return JSONResponse(content={"message": f"{request.days} posts have been saved to Database"},
                                     status_code=200)
             except (ServerSelectionTimeoutError, ConnectionFailure) as db_error:
                 return JSONResponse(
