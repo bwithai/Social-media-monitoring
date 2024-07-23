@@ -103,7 +103,7 @@ def clean_tweet_text(tweet_text):
 
 def is_digit(likes):
     try:
-        int(likes)
+        float(likes)
         return True
     except ValueError:
         return False
@@ -125,9 +125,13 @@ def clean_fb_post_text(post_text):
         if line.strip() == "·":
             from_idx = idx + 1
         if line.strip() == "All reactions:":
-            to_idx = idx - 1
-        if line.strip() == "View more comments":
-            who_commented = idx + 1
+            to_idx = idx
+        if line.strip() == "Like":
+            if lines[idx + 1] == "Comment" and lines[idx + 2] == "Send" and lines[idx + 3] == "Share":
+                if lines[idx + 4] == "View more comments":
+                    who_commented = idx + 5
+                else:
+                    who_commented = idx + 4
         if line.strip() == "Like":
             if lines[idx + 1].strip() == "Reply":
                 comment_end = idx
@@ -136,10 +140,13 @@ def clean_fb_post_text(post_text):
     likes = lines[to_idx + 2].strip()
     if is_digit(likes):
         likes = likes + " likes"
-    if "comments" in lines[to_idx + 4].strip():
-        comments = lines[to_idx + 4].strip()
-    if "shares" in lines[to_idx + 5]:
-        shares = lines[to_idx + 5]
+    comments_check = lines[to_idx + 3].strip()
+    shares_check = lines[to_idx + 4].strip()
+    print(comments, shares, " <-------------")
+    if ("comments" in comments_check) or ("comment" in comments_check):
+        comments = comments_check
+    if ("shares" in shares_check) or ("share" in shares_check):
+        shares = shares_check
 
     description_text: str = ""
     for d in description:
@@ -151,13 +158,21 @@ def clean_fb_post_text(post_text):
         'comments': comments,
         'shares': shares
     }
-    person_comment = lines[who_commented + 1:comment_end]
+    person_comment = lines[who_commented + 1:comment_end - 2]
+    comment_at = lines[comment_end - 2:comment_end]
     person_comment_text = ""
+    comment_time = ""
     for t in person_comment:
         person_comment_text += t
-    post['display_comment'] = lines[
-                                  who_commented].strip() + " commented to say " + f'{person_comment_text}'
-
+    for t in comment_at:
+        comment_time += t
+    if comment_time != "":
+        if person_comment_text != "":
+            post['display_comment'] = lines[
+                                          who_commented].strip() + f" commented at {comment_time} " + f' {person_comment_text}'
+        else:
+            post['display_comment'] = lines[
+                                          who_commented].strip() + f" commented at {comment_time} " + 'comment contain emoji'
     return post
 
 
