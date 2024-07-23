@@ -88,15 +88,17 @@ def get_fb_posts(username, days=30):
                             "links": links,
                             "images": post_images
                         }
-                        pprint.pprint(post_data)
-                        print("+"*90)
+                        # pprint.pprint(post_data)
+                        # print("+"*90)
+                        #
+                        # test = input("Press Enter to close the browser...")
+                        # if test == "e":
+                        #     driver.quit()
+                        #     break
+                        # else:
+                        #     continue
 
-                        test = input("Press Enter to close the browser...")
-                        if test == "e":
-                            driver.quit()
-                            break
-                        else:
-                            continue
+                        collected_data.append(post_data)
 
                     except NoSuchElementException:
                         print("Some elements not found in the post")
@@ -126,4 +128,4 @@ def get_fb_posts(username, days=30):
 
 # Call the function to get Facebook posts
 # get_fb_posts("bookaholicsco", 2){person_comment_text}
-get_fb_posts("agha.rameez.3", 50)
+# get_fb_posts("agha.rameez.3", 50)
