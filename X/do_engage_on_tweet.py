@@ -7,6 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 
 def do_impression_on(tweet_url, reply_message):
+    response = ""
     # Path to your Chrome profile
     chrome_profile_path = os.path.expanduser('~/.config/google-chrome/Profile')
 
@@ -33,16 +34,15 @@ def do_impression_on(tweet_url, reply_message):
         repost_button = wait.until(
             EC.presence_of_element_located((By.XPATH, '//button[@aria-label[contains(., "Repost")]]'))
         )
-        time.sleep(4)
 
         # Check if the tweet is already liked
         aria_label = like_button.get_attribute("aria-label")
         if "liked" not in aria_label.lower():
             driver.execute_script("arguments[0].click();", like_button)
-            print("Tweet liked.")
-            time.sleep(8)
+            response += "Tweet liked.\n"
+            time.sleep(2)
         else:
-            print("Tweet already liked.")
+            response += "Tweet already liked.\n"
 
         # Check if the tweet is already reposted
         aria_label = repost_button.get_attribute("aria-label")
@@ -53,10 +53,10 @@ def do_impression_on(tweet_url, reply_message):
                 EC.presence_of_element_located((By.XPATH, "//div[@data-testid='retweetConfirm']"))
             )
             driver.execute_script("arguments[0].click();", confirm_retweet_button)
-            time.sleep(8)
-            print("Tweet reposted.")
+            time.sleep(2)
+            response += "Tweet reposted.\n"
         else:
-            print("Tweet already reposted.")
+            response += "Tweet already reposted.\n"
 
         # Wait for potential overlays to disappear
         WebDriverWait(driver, 10).until(
@@ -79,21 +79,23 @@ def do_impression_on(tweet_url, reply_message):
             EC.element_to_be_clickable((By.XPATH,
                                         '//*[@id="react-root"]/div/div/div[2]/main/div/div/div/div[1]/div/section/div/div/div[1]/div/div/div/div/div[2]/div[2]/div/div/div/div[2]/div[2]/div[2]/div/div/div/button'))
         )
-        time.sleep(4)
+        time.sleep(2)
         send_reply_button.click()
         # driver.execute_script("arguments[0].click();", send_reply_button)
-        print("Reply sent.")
+        response += "Reply sent."
 
-        input("Press Enter to close the browser...")
+        time.sleep(5)
         driver.quit()
+        return response
 
     except Exception as e:
         print(f"An error occurred: {e}")
         driver.quit()
+        return response
 
 
 # Example usage
 # tweet_url = "https://x.com/elonmusk/status/1804188196546449660"  # Replace with the actual tweet URL
-tweet_url = "https://x.com/elonmusk/status/1479236333516165121"  # Replace with the actual tweet URL
-reply_message = "exactly it is"  # Replace with the actual reply message
-do_impression_on(tweet_url, reply_message)
+# tweet_url = "https://x.com/elonmusk/status/1479236333516165121"  # Replace with the actual tweet URL
+# reply_message = "exactly it is"  # Replace with the actual reply message
+# do_impression_on(tweet_url, reply_message)
