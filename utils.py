@@ -1,5 +1,7 @@
 import json
 import os
+
+import unidecode
 from bson import ObjectId
 from dotenv import load_dotenv
 
@@ -99,6 +101,22 @@ def clean_tweet_text(tweet_text):
         tweet['tweet_text'] = '\n'.join(lines[5:to])
 
     return tweet
+
+
+def find_severity_score(hashtags, keyword):
+    # Normalize the keyword for comparison
+    normalized_keyword = unidecode.unidecode(keyword).lower()
+
+    # Filter hashtags containing the keyword, with normalization
+    filtered_hashtags = [hashtag for hashtag in hashtags if normalized_keyword in unidecode.unidecode(hashtag).lower()]
+
+    # Severity score is the count of filtered hashtags
+    severity_score = len(filtered_hashtags)
+
+    # Calculate the percentage
+    percentage = round((severity_score / len(hashtags)) * 100, 2)
+
+    return severity_score, filtered_hashtags, percentage
 
 
 def is_digit(likes):
