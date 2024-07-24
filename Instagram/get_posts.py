@@ -92,9 +92,10 @@ def fetch_profile_data(profile_url):
 
             # Extract caption
             caption = ""
-            caption_element = soup.find('div', {'role': 'button'}).find('span')
+            caption_element = soup.find('div', class_='_a9zs')
             if caption_element:
-                caption = caption_element.text
+                caption_h1 = caption_element.find('h1', class_='_ap3a _aaco _aacu _aacx _aad7 _aade')
+                caption = caption_h1.text if caption_h1 else ""
 
             # Extract hashtags
             hashtags = [a.text for a in soup.find_all('a') if '/explore/tags/' in a['href']]
