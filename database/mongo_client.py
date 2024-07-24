@@ -17,6 +17,7 @@ insta_collection = db["instagram"]
 tiktok_collection = db["tiktok"]
 fb_collection = db["facebook"]
 user_collection = db["user"]
+connected_device_collection = ""
 
 
 def close_mongo_client():

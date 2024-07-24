@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 import pymongo
 
-from database.mongo_client import db, connected_device_collection, x_collection
+from database.mongo_client import db, connected_device_collection, x_collection, user_collection
 
 
 def update_docs_for_tracerout(inserted_id, hop_dict):
@@ -26,15 +26,73 @@ def add_system(system_info):
     return insert_result.inserted_id
 
 
-def get_all_documents_of_connected_pc():
-    # Query the collection and retrieve all documents without projection
-    print("Query get_all_documents_of_connected_pc is in progress...")
+def get_all_hashtags():
+    # Query the collection and retrieve only the hashtags field using projection
+    print("Query get_all_hashtags is in progress...")
     start = time.time()
-    documents = connected_device_collection.find()
+    documents = x_collection.find({}, {"_id": 0, "hashtags": 1})
     end = time.time()
     print(f"Query took {round(end - start, 2)} s.")
 
-    return documents
+    # Extract hashtags from each document
+    hashtags = []
+    for doc in documents:
+        if 'hashtags' in doc:
+            hashtags.extend(doc['hashtags'])
+
+    return hashtags
+
+
+def get_hashtags():
+    # Query the collection and retrieve all documents without projection
+    print("Query get_all_tweets is in progress...")
+    start = time.time()
+    documents = x_collection.find()
+    end = time.time()
+    print(f"Query took {round(end - start, 2)} s.")
+
+    # Extract hashtags from each tweet
+    hashtags = []
+    for doc in documents:
+        if 'hashtags' in doc:
+            hashtags.extend(doc['hashtags'])
+
+    return hashtags
+
+
+def get_all_users():
+    # Define the projection
+    projection = {
+        "_id": 1,  # Exclude the _id field
+        "name": 1,
+        "email": 1,
+        "mobile_number": 1,
+        "address": 1,
+        "fb_username": 1,
+        "insta_username": 1,
+        "x_username": 1,
+        "hashtags": 1,
+        # Add other fields you want to retrieve
+    }
+    # Query the collection and retrieve all documents without projection
+    print("Query get_all_users is in progress...")
+    start = time.time()
+    documents = user_collection.find({}, projection)
+    end = time.time()
+    print(f"Query took {round(end - start, 2)} s.")
+
+    return list(documents)
+
+
+def get_all_tweets():
+    # Query the collection and retrieve all documents without projection
+    print("Query get_all_tweets is in progress...")
+    start = time.time()
+    documents = x_collection.find()
+    end = time.time()
+    print(f"Query took {round(end - start, 2)} s.")
+
+    return list(documents)
 
 
 def get_pc_from_db(system_uuid, current_page):

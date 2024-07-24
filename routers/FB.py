@@ -5,7 +5,7 @@ from pymongo.errors import ServerSelectionTimeoutError, ConnectionFailure
 from starlette.responses import JSONResponse
 
 from FB.get_posts import get_fb_posts
-from schemas import UnameDay_Schema
+from schemas import CrawlerSchema
 from database.mongo_client import fb_collection
 
 fb_router = APIRouter(prefix="/v1-FB", tags=["Facebook"])
@@ -18,7 +18,7 @@ def json_default(obj):
 
 
 @fb_router.post('/fetch-fb-posts')
-async def fetch_fb_post(request: UnameDay_Schema):
+async def fetch_fb_post(request: CrawlerSchema):
     try:
         post_data = get_fb_posts(username=request.username, days=request.days)
         if post_data:
