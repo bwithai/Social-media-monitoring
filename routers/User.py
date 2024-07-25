@@ -35,8 +35,12 @@ async def add_user(request: UserSchema):
 async def get_users():
     try:
         users = serialize_object_id(get_all_users())
-        return JSONResponse(content=users,
-                            status_code=200)
+        if users:
+            return JSONResponse(content=users,
+                                status_code=200)
+        else:
+            JSONResponse(content={"message": "Please add user"},
+                         status_code=200)
     except (ServerSelectionTimeoutError, ConnectionFailure) as db_error:
         return JSONResponse(
             content={"error": "Failed to connect to MongoDB. Please ensure MongoDB Docker is running.",

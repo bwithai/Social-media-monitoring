@@ -2,9 +2,25 @@ import time
 from datetime import datetime, timedelta
 
 import pymongo
+from pymongo.errors import ServerSelectionTimeoutError, ConnectionFailure
 
 from database.mongo_client import db, connected_device_collection, x_collection, user_collection
 
+
+# def try_this_approach():
+# try:
+# Find the user
+# update_result = user_collection.update_one(
+#     {"name": request.username},  # Assuming you want to update the user "sana"
+#     {"$push": {"crawler.X": {"$each": tweet_data}}},
+#     upsert=True  # Create the document if it doesn't exist
+# )
+#
+# if update_result.modified_count > 0 or update_result.upserted_id:
+#     return JSONResponse(content={"message": "Tweets have been saved to the user's crawler list."},
+#                         status_code=200)
+# else:
+#     raise HTTPException(status_code=500, detail="Failed to update the user document with tweets.")
 
 def update_docs_for_tracerout(inserted_id, hop_dict):
     filter_criteria = {"_id": inserted_id}
@@ -19,11 +35,30 @@ def update_docs_for_tracerout(inserted_id, hop_dict):
     print(f"Matched {result.matched_count} document(s) and modified {result.modified_count} document(s)")
 
 
-def add_system(system_info):
-    create_indexing()
-    # Insert the entire list with timestamp
-    insert_result = connected_device_collection.insert_one(system_info)
-    return insert_result.inserted_id
+def add_tweets(request, tweets):
+    # Check if the user exists
+    try:
+        user = user_collection.find_one({"name": request.username})
+
+        if not user:
+            return "User not found"
+
+        index_fields = ["username", "hashtags"]
+        create_indexing(x_collection, index_fields)
+        document = {
+            "username": request.username,
+            "days": request.days,
+            "tweets": tweets
+        }
+        insert_result = x_collection.insert_one(document)
+        # Update the user's document with the new tweet ID in the crawler.x field
+        user_collection.update_one(
+            {"_id": user["_id"]},
+            {"$push": {"crawler.X": insert_result.inserted_id}}
+        )
+        return f"{request.days} day Tweets inserted successfully"
+    except (ServerSelectionTimeoutError, ConnectionFailure) as db_error:
+        return db_error
 
 
 def get_all_hashtags():
@@ -77,7 +112,9 @@ def get_all_users():
     # Query the collection and retrieve all documents without projection
     print("Query get_all_users is in progress...")
     start = time.time()
-    documents = user_collection.find({}, projection)
+    # documents = user_collection.find({}, projection)
+    # without projection
+    documents = user_collection.find()
     end = time.time()
     print(f"Query took {round(end - start, 2)} s.")
 
@@ -199,16 +236,15 @@ def get_documents_in_time_range(minutes):
     return documents
 
 
-def create_indexing():
-    print("indexed on System_UUID, timestamp")
-    index_fields = ["System_UUID", "timestamp"]
+def create_indexing(collection, index_fields):
+    print("indexing...")
 
     # Create indexes for the collection
     # print("Indexing is in progress...")
     # start_idx = time.time()
     for field in index_fields:
-        connected_device_collection.create_index([(field, pymongo.DESCENDING)])
-        connected_device_collection.create_index([(field, pymongo.ASCENDING)])
+        collection.create_index([(field, pymongo.ASCENDING)])
+        collection.create_index([(field, pymongo.ASCENDING)])
     # end_idx = time.time()
     # print(f"Indexing Took {round(end_idx - start_idx, 2)} s.")
 

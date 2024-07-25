@@ -4,7 +4,6 @@ from pydantic import BaseModel, EmailStr, constr
 
 
 class CrawlerSchema(BaseModel):
-
     username: str
     days: int = 120
 
@@ -20,4 +19,10 @@ class UserSchema(BaseModel):
     hashtags: List[str]
 
     def as_dict(self) -> dict:
-        return self.dict()
+        user_dict = self.dict()
+        user_dict["crawler"] = {
+            "X": [],
+            "Instagram": [],
+            "facebook": []
+        }
+        return user_dict

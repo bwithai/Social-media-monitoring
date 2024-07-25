@@ -5,6 +5,7 @@ from pymongo.errors import ServerSelectionTimeoutError, ConnectionFailure
 from starlette.responses import JSONResponse
 
 from X.do_engage_on_tweet import do_impression_on
+from database.queries import add_tweets
 from schemas import CrawlerSchema
 from X.get_tweets import get_tweets
 from database.mongo_client import x_collection
@@ -23,14 +24,14 @@ async def fetch_tweets(request: CrawlerSchema):
     try:
         tweet_data = get_tweets(username=request.username, days=request.days)
         if tweet_data:
-            try:
-                x_collection.insert_many(tweet_data)
-                return JSONResponse(content={"message": f"{request.days} days post(s) have been saved to Database"},
-                                    status_code=200)
-            except (ServerSelectionTimeoutError, ConnectionFailure) as db_error:
+            result = add_tweets(request, tweet_data)
+            if isinstance(result, Exception):
                 return JSONResponse(
                     content={"Error": "Failed to connect to MongoDB. Please ensure MongoDB Docker is running.",
-                             "Details": str(db_error)}, status_code=500)
+                             "Details": str(result)}, status_code=500)
+            else:
+                return JSONResponse(content={"message": result},
+                                    status_code=200)
         else:
             return JSONResponse(content={"Message": "Scraping Failed"}, status_code=500)
     except Exception as e:
