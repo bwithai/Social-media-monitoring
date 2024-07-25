@@ -4,6 +4,7 @@ from fastapi import APIRouter
 from pymongo.errors import ServerSelectionTimeoutError, ConnectionFailure
 from starlette.responses import JSONResponse
 
+from communication.rabitmq import RabbitMQConnection
 from database.queries import get_all_users
 from schemas import UserSchema
 from database.mongo_client import user_collection
@@ -16,10 +17,22 @@ router = APIRouter(prefix="/v1-User", tags=["Users"])
 async def add_user(request: UserSchema):
     try:
         user = request.as_dict()
+        pprint.pprint(user)
         if user:
             try:
                 user_collection.insert_one(user)
-                return JSONResponse(content={"message": "User has been saved to the database."},
+
+                try:
+                    with RabbitMQConnection() as rabbitmq:
+                        rabbitmq.publish(request.as_dict())
+                        print("Message published to the queue")
+                except Exception as rabbitmq_error:
+                    return JSONResponse(
+                        content={"error": "Failed to publish to RabbitMQ.", "details": str(rabbitmq_error)},
+                        status_code=500
+                    )
+
+                return JSONResponse(content={"message": f"Crawling started for {user['name']} based on its queue."},
                                     status_code=200)
             except (ServerSelectionTimeoutError, ConnectionFailure) as db_error:
                 return JSONResponse(
