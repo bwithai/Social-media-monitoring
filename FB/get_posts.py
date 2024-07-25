@@ -5,9 +5,11 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, NoSuchElementException, WebDriverException, ElementClickInterceptedException, ElementNotInteractableException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException, WebDriverException, \
+    ElementClickInterceptedException, ElementNotInteractableException
 
 from utils import clean_fb_post_text
+
 
 def remove_duplicates(images):
     unique_images = []
@@ -18,6 +20,7 @@ def remove_duplicates(images):
                 unique_images.append(img_url)
                 seen_urls.add(img_url)
     return unique_images
+
 
 def get_fb_posts(username, days=30):
     url = f"https://www.facebook.com/{username}"
@@ -54,8 +57,9 @@ def get_fb_posts(username, days=30):
                             see_more_button = post.find_element(By.XPATH, './/div[contains(text(), "See more")]')
                             driver.execute_script("arguments[0].scrollIntoView(true);", see_more_button)
                             driver.execute_script("arguments[0].click();", see_more_button)
-                        except (NoSuchElementException, ElementClickInterceptedException, ElementNotInteractableException) as e:
-                            print(f"See more button error")
+                        except (
+                        NoSuchElementException, ElementClickInterceptedException, ElementNotInteractableException) as e:
+                            print(f"Current post have no (See more) button")
                             # pass  # Continue if no "See more" button or unable to click
 
                         description = post.text.strip()
@@ -67,7 +71,8 @@ def get_fb_posts(username, days=30):
                         new_posts_found = True
 
                         try:
-                            datetime_element = post.find_element(By.XPATH, './/a[contains(@href, "timestamp")]/span/span')
+                            datetime_element = post.find_element(By.XPATH,
+                                                                 './/a[contains(@href, "timestamp")]/span/span')
                             post_datetime = datetime_element.get_attribute("title")
                         except NoSuchElementException:
                             post_datetime = None
@@ -76,7 +81,8 @@ def get_fb_posts(username, days=30):
 
                         images = post.find_elements(By.CSS_SELECTOR, "img")
                         post_images = [img.get_attribute('src') for img in images if
-                                       'emoji' not in img.get_attribute('src') and 'https://' in img.get_attribute('src')]
+                                       'emoji' not in img.get_attribute('src') and 'https://' in img.get_attribute(
+                                           'src')]
 
                         hashtags = [part for part in description.split() if part.startswith('#')]
 
@@ -103,11 +109,11 @@ def get_fb_posts(username, days=30):
                     except NoSuchElementException:
                         print("Some elements not found in the post")
 
-                if len(collected_data) >= days:
-                    driver.quit()
-                    return collected_data
+            if len(collected_data) >= days:
+                driver.quit()
+                return collected_data
 
-            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            driver.execute_script("window.scrollBy(0, window.innerHeight);")
             time.sleep(SCROLL_PAUSE_TIME)
             new_height = driver.execute_script("return document.body.scrollHeight")
             if new_height == last_height and not new_posts_found:
@@ -115,17 +121,20 @@ def get_fb_posts(username, days=30):
             last_height = new_height
 
         except TimeoutException:
-            print("Timed out waiting for posts to load")
+            print("Timed out waiting for posts to load by get_posts(FB)")
             break
         except WebDriverException as e:
-            raise Exception(f"WebDriver error occurred: {e}")
+            raise Exception(f"WebDriver error occurred by get_posts(FB): {e}")
         except Exception as e:
-            print(f"An error occurred: {e}")
+            print(f"An error occurred by get_posts(FB): {e}")
             break
 
     driver.quit()
     return collected_data
 
+
 # Call the function to get Facebook posts
 # get_fb_posts("bookaholicsco", 2){person_comment_text}
-# get_fb_posts("agha.rameez.3", 50)
+# data = get_fb_posts("agha.rameez.3", 10)
+# pprint.pprint(data)
+# print("total post scraped: ", len(data))

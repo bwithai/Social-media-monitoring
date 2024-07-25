@@ -1,10 +1,23 @@
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import pymongo
 from pymongo.errors import ServerSelectionTimeoutError, ConnectionFailure
 
-from database.mongo_client import db, connected_device_collection, x_collection, user_collection
+from database.mongo_client import db, connected_device_collection, x_collection, user_collection, insta_collection, \
+    fb_collection
+
+target_crawler = {
+    'X': 'tweets',
+    'facebook': "fb_posts",
+    'Instagram': "insta_posts"
+}
+
+target_collection = {
+    'X': x_collection,
+    'facebook': fb_collection,
+    'Instagram': insta_collection
+}
 
 
 # def try_this_approach():
@@ -35,7 +48,7 @@ def update_docs_for_tracerout(inserted_id, hop_dict):
     print(f"Matched {result.matched_count} document(s) and modified {result.modified_count} document(s)")
 
 
-def add_tweets(request, tweets):
+def add_crawler_data(request, scraped_data, crawler: str):
     # Check if the user exists
     try:
         user = user_collection.find_one({"name": request.username})
@@ -43,20 +56,33 @@ def add_tweets(request, tweets):
         if not user:
             return "User not found"
 
-        index_fields = ["username", "hashtags"]
-        create_indexing(x_collection, index_fields)
-        document = {
-            "username": request.username,
-            "days": request.days,
-            "tweets": tweets
-        }
-        insert_result = x_collection.insert_one(document)
-        # Update the user's document with the new tweet ID in the crawler.x field
-        user_collection.update_one(
-            {"_id": user["_id"]},
-            {"$push": {"crawler.X": insert_result.inserted_id}}
-        )
-        return f"{request.days} day Tweets inserted successfully"
+        for key, value in target_crawler.items():
+            if key == crawler:
+                index_fields = ["username", "hashtags"]
+                create_indexing(target_collection[crawler], index_fields)
+                document = {
+                    "username": request.username,
+                    "days": request.days,
+                    value: scraped_data
+                }
+                insert_result = target_collection[crawler].insert_one(document)
+                # Get the current timestamp in UTC
+                current_timestamp = datetime.now(timezone.utc).isoformat()
+                # Update the user's document with the new tweet ID and timestamp in the crawler.x field
+                user_collection.update_one(
+                    {"_id": user["_id"]},
+                    {
+                        "$push": {
+                            f"crawler.{key}": {
+                                f"{value}_id": insert_result.inserted_id,
+                                "scraped_at": current_timestamp
+                            }
+                        }
+                    }
+                )
+                if crawler != 'X':
+                    return f"{len(scraped_data)} Posts inserted successfully"
+                return f"{request.days} day Tweets inserted successfully"
     except (ServerSelectionTimeoutError, ConnectionFailure) as db_error:
         return db_error
 

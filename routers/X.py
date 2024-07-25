@@ -5,12 +5,12 @@ from pymongo.errors import ServerSelectionTimeoutError, ConnectionFailure
 from starlette.responses import JSONResponse
 
 from X.do_engage_on_tweet import do_impression_on
-from database.queries import add_tweets
+from database.queries import add_crawler_data
 from schemas import CrawlerSchema
 from X.get_tweets import get_tweets
 from database.mongo_client import x_collection
 
-x_router = APIRouter(prefix="/v1-X", tags=["X (Twitter)"])
+router = APIRouter(prefix="/v1-X", tags=["X (Twitter)"])
 
 
 def json_default(obj):
@@ -19,12 +19,12 @@ def json_default(obj):
     raise TypeError
 
 
-@x_router.post('/fetch-tweets')
+@router.post('/fetch-tweets')
 async def fetch_tweets(request: CrawlerSchema):
     try:
         tweet_data = get_tweets(username=request.username, days=request.days)
         if tweet_data:
-            result = add_tweets(request, tweet_data)
+            result = add_crawler_data(request, tweet_data, 'X')
             if isinstance(result, Exception):
                 return JSONResponse(
                     content={"Error": "Failed to connect to MongoDB. Please ensure MongoDB Docker is running.",
@@ -38,7 +38,7 @@ async def fetch_tweets(request: CrawlerSchema):
         return JSONResponse(content={"Error": str(e)}, status_code=500)
 
 
-@x_router.post('/engagement-on-tweets')
+@router.post('/engagement-on-tweets')
 async def fetch_tweets(tweet_url: str, send_message: str):
     try:
         response = do_impression_on(tweet_url=tweet_url, reply_message=send_message)

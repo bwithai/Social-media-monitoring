@@ -2,6 +2,7 @@ import json
 import os
 
 import unidecode
+from bson import ObjectId
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -37,11 +38,15 @@ def __login__(url):
     # jalalayn, Jalalhaddad
 
 
-def serialize_object_id(dic):
-    dic = [
-        {**doc, '_id': str(doc['_id'])} for doc in dic
-    ]
-    return dic
+def serialize_object_id(obj):
+    if isinstance(obj, list):
+        return [serialize_object_id(item) for item in obj]
+    elif isinstance(obj, dict):
+        return {key: serialize_object_id(value) for key, value in obj.items()}
+    elif isinstance(obj, ObjectId):
+        return str(obj)
+    else:
+        return obj
 
 
 def get_path(relative_path):
@@ -163,7 +168,6 @@ def clean_fb_post_text(post_text):
         likes = likes + " likes"
     comments_check = lines[to_idx + 3].strip()
     shares_check = lines[to_idx + 4].strip()
-    print(comments, shares, " <-------------")
     if ("comments" in comments_check) or ("comment" in comments_check):
         comments = comments_check
     if ("shares" in shares_check) or ("share" in shares_check):
