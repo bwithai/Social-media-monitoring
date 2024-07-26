@@ -16,6 +16,9 @@ class UserSchema(BaseModel):
     fb_username: Optional[str] = None
     insta_username: Optional[str] = None
     x_username: Optional[str] = None
+    num_fb_posts: int
+    num_insta_posts: int
+    num_x_days: int
 
     def as_dict(self) -> dict:
         user_dict = self.dict()

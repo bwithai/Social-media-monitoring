@@ -2,6 +2,7 @@ import time
 from datetime import datetime, timedelta, timezone
 
 import pymongo
+from bson import ObjectId
 from pymongo.errors import ServerSelectionTimeoutError, ConnectionFailure
 
 from database.mongo_client import db, connected_device_collection, x_collection, user_collection, insta_collection, \
@@ -48,10 +49,40 @@ def update_docs_for_tracerout(inserted_id, hop_dict):
     print(f"Matched {result.matched_count} document(s) and modified {result.modified_count} document(s)")
 
 
-def add_crawler_data(request, scraped_data, crawler: str):
+def add_user_to_db(user):
+    index_fields = ["name", "email"]
+    create_indexing(user_collection, index_fields)
+    result = user_collection.insert_one(user)
+    return result.inserted_id
+
+
+def add_logs(email, logs):
+    user = user_collection.find_one({"email": email})
+    update_result = user_collection.update_one(
+        {"_id": user["_id"]},
+        {
+            "$push": {
+                "logs": logs
+            }
+        }
+    )
+    if update_result.modified_count > 0 or update_result.upserted_id:
+        print("Logs have been saved to the user's document.")
+
+
+def get_user_by_id(user_id):
+    try:
+        user = user_collection.find_one({"_id": ObjectId(user_id)})
+        return user
+    except Exception as e:
+        print(f"Error retrieving user: {e}")
+        return None
+
+
+def add_crawler_data(request, scraped_data, crawler: str, email: str):
     # Check if the user exists
     try:
-        user = user_collection.find_one({"name": request.username})
+        user = user_collection.find_one({"email": email})
 
         if not user:
             return "User not found"
@@ -62,7 +93,7 @@ def add_crawler_data(request, scraped_data, crawler: str):
                 create_indexing(target_collection[crawler], index_fields)
                 document = {
                     "username": request.username,
-                    "days": request.days,
+                    "up_to": request.days,
                     value: scraped_data
                 }
                 insert_result = target_collection[crawler].insert_one(document)

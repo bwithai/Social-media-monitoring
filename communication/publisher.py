@@ -1,4 +1,4 @@
-from communication.rabitmq import RabbitMQConnection, callback
+from communication.rabbitmq import RabbitMQConnection, callback
 
 import json
 
