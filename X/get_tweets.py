@@ -6,8 +6,8 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import StaleElementReferenceException
-import json
+from selenium.common.exceptions import StaleElementReferenceException, ElementClickInterceptedException, \
+    NoSuchElementException
 
 from utils import clean_tweet_text
 
@@ -43,6 +43,22 @@ def get_tweets(username, days=30):
         for elem in elements:
             try:
                 tweet_text = elem.text
+                # Check if "Show more" button is present
+                # show_more_button = elem.find_elements(By.XPATH, './/span[contains(text(), "Show more")]')
+                # if show_more_button:
+                #     initial_tweet_text = tweet_text  # Store initial tweet text
+                #     try:
+                #         show_more_button[0].click()
+                #         time.sleep(1)  # Wait for the tweet text to expand
+                #         expanded_tweet_text = elem.text  # Get the expanded tweet text
+                #         tweet_text = initial_tweet_text + " " + expanded_tweet_text  # Concatenate the texts
+                #
+                #         # Go back to the previous page
+                #         driver.back()
+                #         time.sleep(1)  # Wait for the page to load
+                #     except (ElementClickInterceptedException, NoSuchElementException):
+                #         print("Failed to click 'Show more' button. Scraping initial text only.")
+
                 images = elem.find_elements(By.CSS_SELECTOR, 'img')
                 videos = elem.find_elements(By.CSS_SELECTOR, 'video')
 
@@ -61,19 +77,15 @@ def get_tweets(username, days=30):
                     date_str = date_elements[0].get_attribute('datetime')
                     tweet_date = datetime.fromisoformat(date_str[:-1])  # Remove the 'Z' at the end for proper parsing
 
+                # Check if the tweet is pinned
+                pinned = 'Pinned' in tweet_text
+
                 # Check if the tweet date is within the specified range
                 if tweet_date and tweet_date < cutoff_date:
-                    print(f"Reached tweets older than {days} days.")
-                    # # Print the collected tweets in JSON format
-                    # for tweet in tweets_data:
-                    #     print(json.dumps(tweet, indent=4, default=str))
-
-                    # or add into database
-                    # input("Press Enter to close the browser...")
-                    # Close the browser
-                    time.sleep(2)
-                    driver.quit()
-                    return tweets_data
+                    if not pinned:
+                        print(f"Reached tweets older than {days} days.")
+                        driver.quit()
+                        return tweets_data
 
                 # Extract hashtags
                 hashtags = [part for part in tweet_text.split() if part.startswith('#')]
@@ -82,12 +94,9 @@ def get_tweets(username, days=30):
 
                 # Check if the tweet is a repost or self-repost
                 reposted = 'reposted' in tweet_text
-                # self_repost = 'self' in tweet_text.lower()
-
-                # Check if the tweet is pinned
-                pinned = 'Pinned' in tweet_text
 
                 tweet_data = {
+                    'original_tweet_text': tweet_text,
                     'tweet': clean_tweet_text(tweet_text),
                     'images': tweet_images,
                     'videos': tweet_videos,
@@ -104,8 +113,8 @@ def get_tweets(username, days=30):
                 # Handle the case where the element becomes stale
                 continue
 
-        # Scroll down to the bottom of the page
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        # Scroll down to the bottom of the page more gradually
+        driver.execute_script("window.scrollBy(0, window.innerHeight);")
         time.sleep(2)  # Wait for new tweets to load
 
         # Calculate new scroll height and compare with last scroll height

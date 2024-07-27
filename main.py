@@ -1,9 +1,7 @@
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
-from routers.User import user_router
-from routers.X import x_router
-from routers.FB import fb_router
+from routers import User, X, FB
 
 # api
 app = FastAPI(
@@ -28,10 +26,9 @@ def wellcome():
     }
 
 
-# X (Twitter)
-app.include_router(x_router)
-app.include_router(fb_router)
-app.include_router(user_router)
+app.include_router(User.router)
+app.include_router(X.router)
+app.include_router(FB.router)
 
 if __name__ == "__main__":
     import uvicorn
