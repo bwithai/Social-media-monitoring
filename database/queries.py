@@ -7,6 +7,7 @@ from pymongo.errors import ServerSelectionTimeoutError, ConnectionFailure
 
 from database.mongo_client import db, connected_device_collection, x_collection, user_collection, insta_collection, \
     fb_collection
+from utils import serialize_datetime
 
 target_crawler = {
     'X': 'tweets',
@@ -70,9 +71,37 @@ def add_logs(email, logs):
         print("Logs have been saved to the user's document.")
 
 
+def get_user_by_id_extend_posts(user_id):
+    try:
+        user = user_collection.find_one({"_id": ObjectId(user_id)})
+
+        x_list = user["crawler"]["X"]
+        fb_list = user["crawler"]["facebook"]
+        print(fb_list)
+        X = x_collection.find_one({"_id": ObjectId(x_list[0]["tweets_id"])})
+        FB = fb_collection.find_one({"_id": ObjectId(fb_list[0]["fb_posts_id"])})
+
+        user["crawler"]["X"] = serialize_datetime(X['tweets'])
+        user["crawler"]["facebook"] = serialize_datetime(FB['fb_posts'])
+
+        return user
+    except Exception as e:
+        print(f"Error retrieving user: {e}")
+        return None
+
+
 def get_user_by_id(user_id):
     try:
         user = user_collection.find_one({"_id": ObjectId(user_id)})
+        return user
+    except Exception as e:
+        print(f"Error retrieving user: {e}")
+        return None
+
+
+def get_user_by_email(email):
+    try:
+        user = user_collection.find_one({"email": email})
         return user
     except Exception as e:
         print(f"Error retrieving user: {e}")

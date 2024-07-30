@@ -13,3 +13,5 @@ try.py
 .env
 Tiktok
 test_query.py
+server.pfx
+user_report.pdf
