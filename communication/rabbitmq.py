@@ -54,6 +54,9 @@ class RabbitMQConnection:
 def callback(ch, method, properties, body):
     print("Received message:")
     user = json.loads(body)
+    # pprint.pprint(user)
+    # print('-' * 80)
+    # print('_' * 80)
     start_crawling(user)
 
 

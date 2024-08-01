@@ -40,7 +40,7 @@ def do_impression_on(tweet_url, reply_message):
         if "liked" not in aria_label.lower():
             driver.execute_script("arguments[0].click();", like_button)
             response += "Tweet liked.\n"
-            time.sleep(2)
+            time.sleep(3)
         else:
             response += "Tweet already liked.\n"
 

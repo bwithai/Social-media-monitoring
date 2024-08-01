@@ -1,3 +1,4 @@
+import pprint
 import time
 from datetime import datetime, timedelta, timezone
 
@@ -71,20 +72,19 @@ def add_logs(email, logs):
         print("Logs have been saved to the user's document.")
 
 
-def get_user_by_id_extend_posts(user_id):
+def get_x_by_id(tweets_id):
     try:
-        user = user_collection.find_one({"_id": ObjectId(user_id)})
+        tweets = x_collection.find_one({"_id": ObjectId(tweets_id)})
+        return tweets
+    except Exception as e:
+        print(f"Error retrieving user: {e}")
+        return None
 
-        x_list = user["crawler"]["X"]
-        fb_list = user["crawler"]["facebook"]
-        print(fb_list)
-        X = x_collection.find_one({"_id": ObjectId(x_list[0]["tweets_id"])})
-        FB = fb_collection.find_one({"_id": ObjectId(fb_list[0]["fb_posts_id"])})
 
-        user["crawler"]["X"] = serialize_datetime(X['tweets'])
-        user["crawler"]["facebook"] = serialize_datetime(FB['fb_posts'])
-
-        return user
+def get_fb_posts_by_id(posts_id):
+    try:
+        fb_posts = fb_collection.find_one({"_id": ObjectId(posts_id)})
+        return fb_posts
     except Exception as e:
         print(f"Error retrieving user: {e}")
         return None
@@ -93,6 +93,44 @@ def get_user_by_id_extend_posts(user_id):
 def get_user_by_id(user_id):
     try:
         user = user_collection.find_one({"_id": ObjectId(user_id)})
+        return user
+    except Exception as e:
+        print(f"Error retrieving user: {e}")
+        return str(e)
+
+
+def delete_user_by_id(user_id):
+    try:
+        user_id_obj = ObjectId(user_id)
+        user_exists = user_collection.find_one({"_id": user_id_obj})
+
+        if not user_exists:
+            print(f"User ID {user_id} not found in the database.")
+            return None
+
+        # Delete the user document from both collections
+        result = user_collection.delete_one({"_id": user_id_obj})
+        if result.deleted_count > 0:
+            return f"User ID {user_id} has been successfully deleted."
+        else:
+            return f"User ID {user_id} was not found in user collection."
+    except Exception as e:
+        print(f"Error retrieving user: {e}")
+        return str(e)
+
+
+def get_user_by_id_extend_posts(user_id):
+    try:
+        user = user_collection.find_one({"_id": ObjectId(user_id)})
+
+        x_list = user["crawler"]["X"]
+        fb_list = user["crawler"]["facebook"]
+        X = x_collection.find_one({"_id": ObjectId(x_list[0]["tweets_id"])})
+        FB = fb_collection.find_one({"_id": ObjectId(fb_list[0]["fb_posts_id"])})
+
+        user["crawler"]["X"] = serialize_datetime(X['tweets'])
+        user["crawler"]["facebook"] = serialize_datetime(FB['fb_posts'])
+
         return user
     except Exception as e:
         print(f"Error retrieving user: {e}")
@@ -147,21 +185,61 @@ def add_crawler_data(request, scraped_data, crawler: str, email: str):
         return db_error
 
 
-def get_all_hashtags():
-    # Query the collection and retrieve only the hashtags field using projection
+from bson import ObjectId
+
+
+def get_all_hashtags(tweets_id=None, fb_posts_id=None):
+    """
+    Retrieve all hashtags from the tweets and Facebook posts in the database collections.
+
+    Parameters:
+    tweets_id (str): The optional ID to filter documents in the tweets collection.
+    fb_posts_id (str): The optional ID to filter documents in the Facebook posts collection.
+
+    Returns:
+    tuple: Two lists containing hashtags from tweets and Facebook posts, respectively.
+    """
+
+    x_hashtags, fb_hashtags = None, None
+
+    def extract_hashtags(cursor, post_key):
+        return [
+            hashtag
+            for doc in cursor
+            if post_key in doc
+            for post in doc[post_key]
+            if 'hashtags' in post
+            for hashtag in post['hashtags']
+        ]
+
     print("Query get_all_hashtags is in progress...")
-    start = time.time()
-    documents = x_collection.find({}, {"_id": 0, "hashtags": 1})
-    end = time.time()
-    print(f"Query took {round(end - start, 2)} s.")
+    start_time = time.time()
 
-    # Extract hashtags from each document
-    hashtags = []
-    for doc in documents:
-        if 'hashtags' in doc:
-            hashtags.extend(doc['hashtags'])
+    # Validate if the IDs exist in the database
+    if tweets_id:
+        if not x_collection.find_one({"_id": ObjectId(tweets_id)}):
+            print(f"Tweet ID {tweets_id} not found in the database.")
+            x_hashtags = None
+        else:
+            x_query = {"_id": ObjectId(tweets_id)} if tweets_id else {}
+            # Query the collections
+            x_cursor = x_collection.find(x_query, {"_id": 0, "tweets.hashtags": 1})
+            # Extract hashtags from tweets and Facebook posts
+            x_hashtags = extract_hashtags(x_cursor, 'tweets')
 
-    return hashtags
+    if fb_posts_id:
+        if not fb_collection.find_one({"_id": ObjectId(fb_posts_id)}):
+            print(f"Facebook Post ID {fb_posts_id} not found in the database.")
+            fb_hashtags = None
+        else:
+            fb_query = {"_id": ObjectId(fb_posts_id)} if fb_posts_id else {}
+            fb_cursor = fb_collection.find(fb_query, {"_id": 0, "fb_posts.hashtags": 1})
+            fb_hashtags = extract_hashtags(fb_cursor, 'fb_posts')
+
+    end_time = time.time()
+    print(f"Query took {round(end_time - start_time, 2)} seconds.")
+
+    return x_hashtags, fb_hashtags
 
 
 def get_hashtags():

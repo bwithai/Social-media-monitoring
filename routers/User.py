@@ -5,11 +5,11 @@ from starlette.responses import JSONResponse
 
 from communication.rabbitmq import RabbitMQConnection
 from database.queries import get_all_users, add_user_to_db, get_user_by_id, get_user_by_email, \
-    get_user_by_id_extend_posts
+    get_user_by_id_extend_posts, delete_user_by_id
 from schemas import UserSchema
 from utils import serialize_object_id
 
-router = APIRouter(prefix="/v1-User", tags=["Users"])
+router = APIRouter(prefix="/user", tags=["Users"])
 
 
 @router.post('/add-user')
@@ -31,7 +31,7 @@ async def add_user(request: UserSchema):
             # Publish message to RabbitMQ
             try:
                 with RabbitMQConnection() as rabbitmq:
-                    rabbitmq.publish(user_data)
+                    rabbitmq.publish(serialize_object_id(user_data))
                     print("Message published to the queue")
             except Exception as rabbitmq_error:
                 return JSONResponse(
@@ -58,10 +58,24 @@ async def add_user(request: UserSchema):
 
 @router.get('/get-by-id')
 async def get_user(user_id: str):
-    user = get_user_by_id_extend_posts(user_id)
+    user = get_user_by_id(user_id)
     if user:
         return JSONResponse(
             content=serialize_object_id(user),
+            status_code=200
+        )
+    return JSONResponse(
+        content={"message": "User not found. Check if MongoDB is running."},
+        status_code=404
+    )
+
+
+@router.delete('/delete-by-id')
+async def delete_user(user_id: str):
+    user = delete_user_by_id(user_id)
+    if user:
+        return JSONResponse(
+            content=user,
             status_code=200
         )
     return JSONResponse(

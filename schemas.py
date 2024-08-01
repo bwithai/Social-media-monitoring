@@ -1,5 +1,4 @@
 from typing import Optional, List
-
 from pydantic import BaseModel, EmailStr, constr
 
 
@@ -28,3 +27,8 @@ class UserSchema(BaseModel):
             "facebook": []
         }
         return user_dict
+
+
+class GraphSchema(BaseModel):
+    tweets_id: Optional[str] = None
+    fb_posts_id: Optional[str] = None
