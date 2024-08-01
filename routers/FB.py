@@ -4,7 +4,7 @@ from fastapi import APIRouter
 from pymongo.errors import ServerSelectionTimeoutError, ConnectionFailure
 from starlette.responses import JSONResponse
 
-from FB.get_posts import get_fb_posts
+from social_media.facebook import get_fb_posts
 from database.queries import add_crawler_data, get_fb_posts_by_id
 from schemas import CrawlerSchema
 from database.mongo_client import fb_collection

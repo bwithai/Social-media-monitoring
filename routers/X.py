@@ -4,10 +4,10 @@ from fastapi import APIRouter
 from pymongo.errors import ServerSelectionTimeoutError, ConnectionFailure
 from starlette.responses import JSONResponse
 
-from X.do_engage_on_tweet import do_impression_on
+from social_media.do_engage_on_tweet import do_impression_on
 from database.queries import add_crawler_data, get_x_by_id
 from schemas import CrawlerSchema
-from X.get_tweets import get_tweets
+from social_media.X import get_tweets
 from utils import serialize_object_id, serialize_datetime
 
 router = APIRouter(prefix="/x", tags=["X (Twitter)"])
