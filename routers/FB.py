@@ -4,12 +4,13 @@ from fastapi import APIRouter
 from pymongo.errors import ServerSelectionTimeoutError, ConnectionFailure
 from starlette.responses import JSONResponse
 
-from FB.get_posts import get_fb_posts
-from database.queries import add_crawler_data
+from social_media.facebook import get_fb_posts
+from database.queries import add_crawler_data, get_fb_posts_by_id
 from schemas import CrawlerSchema
 from database.mongo_client import fb_collection
+from utils import serialize_object_id
 
-router = APIRouter(prefix="/v1-FB", tags=["Facebook"])
+router = APIRouter(prefix="/fb", tags=["Facebook"])
 
 
 def json_default(obj):
@@ -35,3 +36,17 @@ async def fetch_fb_post(request: CrawlerSchema):
             return JSONResponse(content={"Message": "Scraping Failed"}, status_code=500)
     except Exception as e:
         return JSONResponse(content={"Error": str(e)}, status_code=500)
+
+
+@router.get('/get-by-id')
+async def get_user(posts_id: str):
+    fb_posts = get_fb_posts_by_id(posts_id)
+    if fb_posts:
+        return JSONResponse(
+            content=serialize_object_id(fb_posts),
+            status_code=200
+        )
+    return JSONResponse(
+        content={"message": "User not found. Check if MongoDB is running."},
+        status_code=404
+    )

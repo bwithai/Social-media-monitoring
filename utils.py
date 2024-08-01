@@ -1,5 +1,6 @@
 import json
 import os
+from datetime import datetime
 
 import unidecode
 from bson import ObjectId
@@ -36,6 +37,17 @@ def __login__(url):
     driver.quit()
 
     # jalalayn, Jalalhaddad
+
+
+def serialize_datetime(obj):
+    if isinstance(obj, list):
+        return [serialize_datetime(item) for item in obj]
+    elif isinstance(obj, dict):
+        return {key: serialize_datetime(value) for key, value in obj.items()}
+    elif isinstance(obj, datetime):
+        return str(obj)
+    else:
+        return obj
 
 
 def serialize_object_id(obj):

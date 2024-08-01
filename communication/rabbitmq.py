@@ -4,8 +4,8 @@ import pprint
 
 import pika
 
-from FB.get_posts import get_fb_posts
-from X.get_tweets import get_tweets
+from social_media.facebook import get_fb_posts
+from social_media.X import get_tweets
 from database.queries import add_crawler_data, add_logs
 from schemas import CrawlerSchema
 
@@ -54,6 +54,9 @@ class RabbitMQConnection:
 def callback(ch, method, properties, body):
     print("Received message:")
     user = json.loads(body)
+    # pprint.pprint(user)
+    # print('-' * 80)
+    # print('_' * 80)
     start_crawling(user)
 
 

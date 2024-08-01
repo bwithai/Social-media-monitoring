@@ -4,13 +4,13 @@ from fastapi import APIRouter
 from pymongo.errors import ServerSelectionTimeoutError, ConnectionFailure
 from starlette.responses import JSONResponse
 
-from X.do_engage_on_tweet import do_impression_on
-from database.queries import add_crawler_data
+from social_media.do_engage_on_tweet import do_impression_on
+from database.queries import add_crawler_data, get_x_by_id
 from schemas import CrawlerSchema
-from X.get_tweets import get_tweets
-from database.mongo_client import x_collection
+from social_media.X import get_tweets
+from utils import serialize_object_id, serialize_datetime
 
-router = APIRouter(prefix="/v1-X", tags=["X (Twitter)"])
+router = APIRouter(prefix="/x", tags=["X (Twitter)"])
 
 
 def json_default(obj):
@@ -54,3 +54,19 @@ async def fetch_tweets(tweet_url: str, send_message: str):
             return JSONResponse(content={"Message": f"Engagement Failed on tweet: {tweet_url}"}, status_code=500)
     except Exception as e:
         return JSONResponse(content={"Error": str(e)}, status_code=500)
+
+
+@router.get('/get-by-id')
+async def get_user(tweets_id: str):
+    tweets = get_x_by_id(tweets_id)
+    if tweets:
+        tweets = serialize_datetime(tweets)
+        tweets = serialize_object_id(tweets)
+        return JSONResponse(
+            content=tweets,
+            status_code=200
+        )
+    return JSONResponse(
+        content={"message": "User not found. Check if MongoDB is running."},
+        status_code=404
+    )
