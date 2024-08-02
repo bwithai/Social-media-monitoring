@@ -1,3 +1,5 @@
 selenium
 fastapi
 pymongo
+unidecode
+weasyprint

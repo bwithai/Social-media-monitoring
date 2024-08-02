@@ -37,7 +37,6 @@ if __name__ == "__main__":
     uvicorn.run(
         "main:app",  # Assuming your FastAPI app instance is named `app` in main.py
         host="192.168.1.114",
-        # host="172.0.0.1",
         port=8000,
         ssl_keyfile='./server.key',
         ssl_certfile='./server.crt',

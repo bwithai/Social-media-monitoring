@@ -188,6 +188,20 @@ def add_crawler_data(request, scraped_data, crawler: str, email: str):
 from bson import ObjectId
 
 
+def get_post_caption(tweets_id='None'):
+    # Validate if the IDs exist in the database
+    tweet_captions = None
+    if tweets_id:
+        if not x_collection.find_one({"_id": ObjectId(tweets_id)}):
+            print(f"Tweet ID {tweets_id} not found in the database.")
+            tweet_captions = None
+        else:
+            x_query = {"_id": ObjectId(tweets_id)} if tweets_id else {}
+            # Query the collections
+            x_cursor = x_collection.find(x_query, {"_id": 0, "tweets.original_tweet_text": 1})
+            return x_cursor
+
+
 def get_all_hashtags(tweets_id=None, fb_posts_id=None):
     """
     Retrieve all hashtags from the tweets and Facebook posts in the database collections.

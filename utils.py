@@ -2,6 +2,7 @@ import json
 import os
 from datetime import datetime
 
+import pytz
 import unidecode
 from bson import ObjectId
 from dotenv import load_dotenv
@@ -137,6 +138,25 @@ def find_severity_score(hashtags, keyword):
     percentage = round((severity_score / len(hashtags)) * 100, 2)
 
     return severity_score, filtered_hashtags, percentage
+
+
+def get_current_pakistan_time():
+    """
+    Get the current time in Pakistan in a human-readable format.
+
+    Returns:
+        str: The current time in Pakistan formatted as 'Weekday, Month Day, Year Hour:Minute AM/PM'.
+    """
+    # Define the timezone for Pakistan
+    pakistan_timezone = pytz.timezone('Asia/Karachi')
+
+    # Get the current time in Pakistan
+    current_time_in_pakistan = datetime.now(pakistan_timezone)
+
+    # Format the time in a more human-readable form
+    human_readable_time = current_time_in_pakistan.strftime('%A, %B %d, %Y %I:%M %p')
+
+    return human_readable_time
 
 
 def is_digit(likes):
