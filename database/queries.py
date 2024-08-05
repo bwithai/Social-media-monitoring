@@ -188,18 +188,42 @@ def add_crawler_data(request, scraped_data, crawler: str, email: str):
 from bson import ObjectId
 
 
-def get_post_caption(tweets_id='None'):
+def get_crawlers_ids(user_id):
+    if not user_collection.find_one({"_id": ObjectId(user_id)}):
+        print("User not found from communication")
+    else:
+        query = {"_id": ObjectId(user_id)} if user_id else {}
+        user_cursor = list(user_collection.find(query, {"_id": 0, "crawler": 1}))
+        x_id = user_cursor[0]['crawler']['X'][0]['tweets_id']
+        fb_id = user_cursor[0]['crawler']['facebook'][0]['fb_posts_id']
+        return {'x_id': x_id, 'fb_id': fb_id}
+
+
+def get_post_caption(tweets_id=None, fb_posts_id=None):
     # Validate if the IDs exist in the database
     tweet_captions = None
+    fb_post_captions = None
     if tweets_id:
         if not x_collection.find_one({"_id": ObjectId(tweets_id)}):
             print(f"Tweet ID {tweets_id} not found in the database.")
             tweet_captions = None
         else:
             x_query = {"_id": ObjectId(tweets_id)} if tweets_id else {}
-            # Query the collections
-            x_cursor = x_collection.find(x_query, {"_id": 0, "tweets.original_tweet_text": 1})
-            return x_cursor
+            x_projection = {"_id": 0, "tweets.original_description": 1, "tweets.images": 1, "tweets.links": 1}
+            x_cursor = x_collection.find(x_query, x_projection)
+            tweet_captions = list(x_cursor)[0]['tweets']
+
+    if fb_posts_id:
+        if not fb_collection.find_one({"_id": ObjectId(fb_posts_id)}):
+            print(f"Facebook Post ID {fb_posts_id} not found in the database.")
+            fb_post_captions = None
+        else:
+            fb_query = {"_id": ObjectId(fb_posts_id)} if fb_posts_id else {}
+            fb_projection = {"_id": 0, "fb_posts.original_description": 1, "fb_posts.images": 1, "fb_posts.links": 1}
+            fb_cursor = fb_collection.find(fb_query, fb_projection)
+            fb_post_captions = list(fb_cursor)[0]['fb_posts']
+
+    return tweet_captions, fb_post_captions
 
 
 def get_all_hashtags(tweets_id=None, fb_posts_id=None):

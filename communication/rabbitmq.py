@@ -6,8 +6,9 @@ import pika
 
 from social_media.facebook import get_fb_posts
 from social_media.X import get_tweets
-from database.queries import add_crawler_data, add_logs
+from database.queries import add_crawler_data, add_logs, get_post_caption, get_crawlers_ids
 from schemas import CrawlerSchema
+from social_media.media_utils.analysis import generate_pdf
 
 
 # Context manager class
@@ -54,10 +55,18 @@ class RabbitMQConnection:
 def callback(ch, method, properties, body):
     print("Received message:")
     user = json.loads(body)
+    user_id = user['_id']
     # pprint.pprint(user)
     # print('-' * 80)
     # print('_' * 80)
     start_crawling(user)
+    user_crawlers = get_crawlers_ids(user_id)
+    tweets, fb_posts = get_post_caption(user_crawlers['x_id'], user_crawlers['fb_id'])
+    data = {
+        'tweets': tweets,
+        'fb_posts': fb_posts}
+    keyword = 'Israeli_bombing'
+    generate_pdf(data, keyword, output_file=f'{user_id}.pdf')
 
 
 def start_crawling(user):

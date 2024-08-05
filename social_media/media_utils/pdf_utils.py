@@ -30,7 +30,7 @@ PER_PAGE_HEADER_FOOTER = """header {
             }"""
 
 
-def find_severity_score_based_on_post_data(tweets_data, keyword):
+def find_severity_score_based_on_post_data(data, keyword):
     # Normalize the keyword for comparison
     normalized_keyword = unidecode.unidecode(keyword).lower()
     highlighted_keyword = f"<span style='color:blue;'>{keyword}</span>"
@@ -45,19 +45,25 @@ def find_severity_score_based_on_post_data(tweets_data, keyword):
         return f"<span style='color:blue;'>{match.group(0)}</span>"
 
     # Iterate over tweets and replace the keyword with highlighted_keyword
-    for tweet in tweets_data[0]['tweets']:
-        tweet_text = tweet['original_tweet_text']
+    for tweet in data['tweets']:
+        tweet_text = tweet['original_description']
         if keyword_pattern.search(unidecode.unidecode(tweet_text).lower()):
-            tweet['original_tweet_text'] = keyword_pattern.sub(highlight_match, tweet_text)
+            tweet['original_description'] = keyword_pattern.sub(highlight_match, tweet_text)
+            severity_score += 1
+
+    for post in data['fb_posts']:
+        post_text = post['original_description']
+        if keyword_pattern.search(unidecode.unidecode(post_text).lower()):
+            post['original_description'] = keyword_pattern.sub(highlight_match, post_text)
             severity_score += 1
 
     # Calculate the percentage
-    percentage = round((severity_score / len(tweets_data[0]['tweets'])) * 100, 2)
+    percentage = round((severity_score / len(data['tweets'])) * 100, 2)
 
     # Collect filtered tweets for output
-    filtered_tweets = [
-        tweet['original_tweet_text'] for tweet in tweets_data[0]['tweets']
-        if highlighted_keyword in tweet['original_tweet_text']
+    filtered_description = [
+        tweet['original_description'] for tweet in data['tweets']
+        if highlighted_keyword in tweet['original_description']
     ]
 
-    return severity_score, filtered_tweets, percentage
+    return severity_score, filtered_description, percentage
