@@ -1,10 +1,20 @@
+import os
+
 from weasyprint import HTML
 
 from social_media.media_utils.pdf_utils import find_severity_score_based_on_post_data
 from utils import get_current_pakistan_time
+import database
+
+# Get the path to the 'database' module directory
+module_path = os.path.dirname(database.__file__)
+
+# Construct the path to 'pdf_db' directory
+pdf_db_path = os.path.join(module_path, 'pdf_db')
 
 
 def generate_pdf(data, keyword, output_file='Analysis.pdf'):
+    output_file = f"{pdf_db_path}/{output_file}"
     severity_score, filtered_tweets, percentage = find_severity_score_based_on_post_data(data, keyword)
     keyword_highlighter = '<span style=\'color:blue;\'>'
 
