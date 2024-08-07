@@ -2,7 +2,7 @@ import os
 
 from weasyprint import HTML
 
-from social_media.media_utils.pdf_utils import find_severity_score_based_on_post_data
+from social_media.media_utils.pdf_utils import find_severity_score_based_on_post_data, analyse_severity, generate_chart
 from utils import get_current_pakistan_time
 import database
 
@@ -13,9 +13,11 @@ module_path = os.path.dirname(database.__file__)
 pdf_db_path = os.path.join(module_path, 'pdf_db')
 
 
-def generate_pdf(data, keyword, output_file='Analysis.pdf'):
+def generate_pdf(data, categories_keywords, output_file='Analysis.pdf'):
     output_file = f"{pdf_db_path}/{output_file}"
-    severity_score, filtered_tweets, percentage = find_severity_score_based_on_post_data(data, keyword)
+    # severity_score, filtered_tweets, percentage = find_severity_score_based_on_post_data(data, keyword)
+    results = analyse_severity(data, categories_keywords)
+    chart_base64 = generate_chart(results)
     keyword_highlighter = '<span style=\'color:blue;\'>'
 
     # Generate HTML content
@@ -152,6 +154,44 @@ def generate_pdf(data, keyword, output_file='Analysis.pdf'):
                 margin: 10px 0;
                 padding-bottom: 5px;
             }
+            .images-section {
+                margin-top: 15px;
+            }
+            .images-section img {
+                width: calc(33.33% - 10px);
+                margin-right: 10px;
+                margin-bottom: 10px;
+                height: auto;
+            }
+            .links-section {
+                margin-top: 15px;
+            }
+            .links-section a {
+                color: #1a0dab;
+                text-decoration: none;
+            }
+            .summary-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 20px;
+                text-align: center;
+            }
+            .summary-table th, .summary-table td {
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: center;
+            }
+            .summary-table th {
+                background-color: #f2f2f2;
+                font-weight: bold;
+            }
+            .chart-container {
+                text-align: center;
+                margin: 20px 0;
+            }
+              td[colspan="2"] {
+            background-color: #d9edf7;
+        }
         </style>
     </head>
     <body>
@@ -163,6 +203,39 @@ def generate_pdf(data, keyword, output_file='Analysis.pdf'):
         <div class="container">
             <h1>Analysis Report</h1>
             <div class="section">
+                <h2>Abstraction</h2>
+                <h3>Graph Summary</h3>
+                <div class="chart-container">
+                    <img src="data:image/png;base64, """ + chart_base64 + """" alt="Chart">
+                </div>
+                <h3>Summary Table</h3>
+                <table class="summary-table">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Severity Score</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+    """
+    for category, severity in results.items():
+        html_content += f"""<tr>
+            <td colspan="2">{category}</td>
+        </tr>"""
+        for keyword, severity_score in severity['counter'].items():
+            html_content += f"""
+                <tr>
+                    <td>{keyword}</td>
+                    <td>{severity_score}</td>
+                </tr>
+
+            """
+    html_content += """
+                    </tbody>
+                </table>
+            </div>
+            <h1>Detailed Analysis</h1>
+            <div class="section">
                 <h2>Section 1: Tweets</h2>
                 <h3>Subsection 1.1: Keyword Analysis</h3>
     """
@@ -171,11 +244,11 @@ def generate_pdf(data, keyword, output_file='Analysis.pdf'):
         tweet_text = tweet['original_description']
         tweet_images = tweet.get('images', [])
         tweet_links = tweet.get('links', [])
-        highlighted_tweet_text = tweet_text.replace(keyword, f"<span style='color:blue;'>{keyword}</span>")
+        # highlighted_tweet_text = tweet_text.replace(keyword, f"<span style='color:blue;'>{keyword}</span>")
 
         html_content += f"""
-        <div class='tweet{' highlight' if keyword_highlighter in tweet_text else ''}'>
-            <div class='tweet-content'>{highlighted_tweet_text}</div>
+                <div class='tweet{' highlight' if keyword_highlighter in tweet_text else ''}'>
+                    <div class='tweet-content'>{tweet_text}</div>
         """
 
         if tweet_images:
@@ -203,11 +276,11 @@ def generate_pdf(data, keyword, output_file='Analysis.pdf'):
         post_text = post['original_description']
         post_images = post.get('images', [])
         post_links = post.get('links', [])
-        highlighted_post_text = post_text.replace(keyword, f"<span style='color:blue;'>{keyword}</span>")
+        # highlighted_post_text = post_text.replace(keyword, f"<span style='color:blue;'>{keyword}</span>")
 
         html_content += f"""
-        <div class='post{' highlight' if keyword_highlighter in post_text else ''}'>
-            <div class='post-content'>{highlighted_post_text}</div>
+                <div class='post{' highlight' if keyword_highlighter in post_text else ''}'>
+                    <div class='post-content'>{post_text}</div>
         """
 
         if post_images:
