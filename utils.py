@@ -140,6 +140,20 @@ def find_severity_score(hashtags, keyword):
     return severity_score, filtered_hashtags, percentage
 
 
+def get_highest_match_category(analysis_report):
+    highest_match = -1
+    highest_match_keywords = []
+
+    for keyword, details in analysis_report.items():
+        if details['matched'] > highest_match:
+            highest_match = details['matched']
+            highest_match_keywords = [keyword]
+        elif details['matched'] == highest_match:
+            highest_match_keywords.append(keyword)
+
+    return highest_match_keywords
+
+
 def get_current_pakistan_time():
     """
     Get the current time in Pakistan in a human-readable format.

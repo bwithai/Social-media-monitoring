@@ -8,7 +8,7 @@ from pymongo.errors import ServerSelectionTimeoutError, ConnectionFailure
 
 from database.mongo_client import db, connected_device_collection, x_collection, user_collection, insta_collection, \
     fb_collection
-from utils import serialize_datetime
+from utils import serialize_datetime, get_highest_match_category
 
 target_crawler = {
     'X': 'tweets',
@@ -56,6 +56,41 @@ def add_user_to_db(user):
     create_indexing(user_collection, index_fields)
     result = user_collection.insert_one(user)
     return result.inserted_id
+
+
+def get_analysis_report():
+    user_projection = {"_id": 0, "analysis_report": 1}
+    user_cursor = user_collection.find({}, user_projection)
+    analysis_report = list(user_cursor)
+    return analysis_report
+
+
+def add_user_analysis(user_id, analysis_report):
+    try:
+        user_id_obj = ObjectId(user_id)
+        user_exists = user_collection.find_one({"_id": user_id_obj})
+
+        if not user_exists:
+            return f"User ID {user_id} not found in the database."
+
+        highest_match_category = get_highest_match_category(analysis_report)
+
+        update_result = user_collection.update_one(
+            {"_id": user_exists["_id"]},
+            {
+                "$set": {
+                    "analysis_report": analysis_report,
+                    'highest_match_category': highest_match_category
+                }
+            }
+        )
+        create_indexing(user_collection, ["analysis_report", "highest_match_category"])
+        if update_result.modified_count > 0 or update_result.upserted_id:
+            return "Analysis report has been saved to the user's document."
+        else:
+            return f"User ID {user_id} was not found in user collection."
+    except Exception as e:
+        return f"Error retrieving user for add analysis report : {str(e)}"
 
 
 def add_logs(email, logs):
@@ -156,7 +191,7 @@ def add_crawler_data(request, scraped_data, crawler: str, email: str):
 
         for key, value in target_crawler.items():
             if key == crawler:
-                index_fields = ["username", "hashtags"]
+                index_fields = ["username", "hashtags", "original_description"]
                 create_indexing(target_collection[crawler], index_fields)
                 document = {
                     "username": request.username,

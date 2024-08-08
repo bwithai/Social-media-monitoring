@@ -1,7 +1,9 @@
 import os
 
+from bson import ObjectId
 from weasyprint import HTML
 
+from database.queries import add_user_analysis
 from social_media.media_utils.pdf_utils import find_severity_score_based_on_post_data, analyse_severity, generate_chart
 from utils import get_current_pakistan_time
 import database
@@ -14,10 +16,16 @@ pdf_db_path = os.path.join(module_path, 'pdf_db')
 
 
 def generate_pdf(data, categories_keywords, output_file='Analysis.pdf'):
+    user_id = output_file.split('.')[0]
     output_file = f"{pdf_db_path}/{output_file}"
     # severity_score, filtered_tweets, percentage = find_severity_score_based_on_post_data(data, keyword)
-    results = analyse_severity(data, categories_keywords)
-    chart_base64 = generate_chart(results)
+    analysis_repost = analyse_severity(data, categories_keywords)
+
+    # Update user collection to add repost for analysis update
+    feed_back = add_user_analysis(user_id, analysis_repost)
+    print(feed_back)
+
+    chart_base64 = generate_chart(analysis_repost)
     keyword_highlighter = '<span style=\'color:blue;\'>'
 
     # Generate HTML content
@@ -218,7 +226,7 @@ def generate_pdf(data, categories_keywords, output_file='Analysis.pdf'):
                     </thead>
                     <tbody>
     """
-    for category, severity in results.items():
+    for category, severity in analysis_repost.items():
         html_content += f"""<tr>
             <td colspan="2">{category}</td>
         </tr>"""
@@ -302,7 +310,7 @@ def generate_pdf(data, categories_keywords, output_file='Analysis.pdf'):
         </div>
         <footer>
             <div class="footer">
-                Generated on: {get_current_pakistan_time()}
+                {get_current_pakistan_time()}
             </div>
         </footer>
     </body>

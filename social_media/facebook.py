@@ -60,7 +60,7 @@ def get_fb_posts(username, days=30):
                         except (
                                 NoSuchElementException, ElementClickInterceptedException,
                                 ElementNotInteractableException) as e:
-                            print(f"Current post have no (See more) button")
+                            print('', end='')
                             # pass  # Continue if no "See more" button or unable to click
 
                         description = post.text.strip()

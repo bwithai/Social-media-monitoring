@@ -145,6 +145,15 @@ def analyse_severity(data, categories_keywords):
             tweet['original_description'] = highlighted_text
         highlighted_tweets.append(highlighted_text)
 
+    for post in data['fb_posts']:
+        post_text = post['original_description']
+        highlighted_text = post_text
+        for category, keywords in categories_keywords.items():
+            counts, highlighted_text = count_and_highlight_keywords(highlighted_text, keywords)
+            category_counts[category].update(counts)
+            post['original_description'] = highlighted_text
+        highlighted_tweets.append(highlighted_text)
+
     # Calculate unique keyword matches and category scores
     category_scores = {
         category: {
