@@ -4,11 +4,32 @@ from fastapi import APIRouter
 from starlette.responses import JSONResponse, FileResponse
 
 import database
-from database.queries import get_all_hashtags, get_user_by_id
-from schemas import GraphSchema
-from utils import find_severity_score
+from database.queries import get_all_hashtags, get_user_by_id, get_analysis_report
+from utils import find_severity_score, serialize_object_id
 
 router = APIRouter(prefix="/analysis", tags=["Analysis"])
+
+
+@router.get('/get-analysis-report')
+def separate_users_by_category():
+    response = {}
+    separate_users, total_users, keyword_counts = get_analysis_report()
+    if total_users:
+        for category, users in separate_users.items():
+            separate_users[category] = len(users)
+
+        response['categorized_severity'] = separate_users
+        response['candidates'] = total_users
+        response['keyword_counts'] = keyword_counts
+
+        return JSONResponse(
+            content=response,
+            status_code=200
+        )
+    return JSONResponse(
+        content={"message": "No users found. Please add users."},
+        status_code=404
+    )
 
 
 @router.get('/get-pdf')

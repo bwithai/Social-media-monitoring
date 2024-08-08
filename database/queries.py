@@ -8,7 +8,7 @@ from pymongo.errors import ServerSelectionTimeoutError, ConnectionFailure
 
 from database.mongo_client import db, connected_device_collection, x_collection, user_collection, insta_collection, \
     fb_collection
-from utils import serialize_datetime, get_highest_match_category
+from utils import serialize_datetime, get_highest_match_category, separate_users_by_category, aggregate_keyword_counts
 
 target_crawler = {
     'X': 'tweets',
@@ -59,10 +59,20 @@ def add_user_to_db(user):
 
 
 def get_analysis_report():
-    user_projection = {"_id": 0, "analysis_report": 1}
+    user_projection = {"_id": 1, "analysis_report": 1, "highest_match_category": 1}
     user_cursor = user_collection.find({}, user_projection)
     analysis_report = list(user_cursor)
-    return analysis_report
+
+    # Separate users for table view
+    separate_users = separate_users_by_category(analysis_report)
+
+    # user_count for percentage graph
+    total_users = user_collection.count_documents({})
+
+    # keyword_counts for percentage graph
+    keyword_counts = aggregate_keyword_counts(analysis_report)
+
+    return separate_users, total_users, keyword_counts
 
 
 def add_user_analysis(user_id, analysis_report):

@@ -1,5 +1,6 @@
 import json
 import os
+from collections import defaultdict
 from datetime import datetime
 
 import pytz
@@ -138,6 +139,31 @@ def find_severity_score(hashtags, keyword):
     percentage = round((severity_score / len(hashtags)) * 100, 2)
 
     return severity_score, filtered_hashtags, percentage
+
+
+def aggregate_keyword_counts(data):
+    keyword_counts = defaultdict(lambda: defaultdict(int))
+
+    for entry in data:
+        analysis_report = entry["analysis_report"]
+        for category, details in analysis_report.items():
+            for keyword, count in details["counter"].items():
+                keyword_counts[category][keyword] += count
+
+    # Convert defaultdict to regular dict
+    keyword_counts = {category: dict(keywords) for category, keywords in keyword_counts.items()}
+    return keyword_counts
+
+
+def separate_users_by_category(data):
+    category_users = defaultdict(list)
+
+    for entry in data:
+        user_id = entry['_id']
+        for category in entry['highest_match_category']:
+            category_users[category].append(user_id)
+
+    return dict(category_users)
 
 
 def get_highest_match_category(analysis_report):
