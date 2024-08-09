@@ -10,7 +10,7 @@ from schemas import CrawlerSchema
 from social_media.X import get_tweets
 from utils import serialize_object_id, serialize_datetime
 
-router = APIRouter(prefix="/x", tags=["X (Twitter)"])
+route = APIRouter(prefix="/x", tags=["X (Twitter)"])
 
 
 def json_default(obj):
@@ -19,7 +19,7 @@ def json_default(obj):
     raise TypeError
 
 
-@router.post('/fetch-tweets')
+@route.post('/fetch-tweets')
 async def fetch_tweets(request: CrawlerSchema):
     try:
         tweet_data = get_tweets(username=request.username, days=request.days)
@@ -38,7 +38,7 @@ async def fetch_tweets(request: CrawlerSchema):
         return JSONResponse(content={"Error": str(e)}, status_code=500)
 
 
-@router.post('/engagement-on-tweets')
+@route.post('/engagement-on-tweets')
 async def fetch_tweets(tweet_url: str, send_message: str):
     try:
         response = do_impression_on(tweet_url=tweet_url, reply_message=send_message)
@@ -56,7 +56,7 @@ async def fetch_tweets(tweet_url: str, send_message: str):
         return JSONResponse(content={"Error": str(e)}, status_code=500)
 
 
-@router.get('/get-by-id')
+@route.get('/get-by-id')
 async def get_user(tweets_id: str):
     tweets = get_x_by_id(tweets_id)
     if tweets:

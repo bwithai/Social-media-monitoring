@@ -7,10 +7,10 @@ import database
 from database.queries import get_all_hashtags, get_user_by_id, get_analysis_report
 from utils import find_severity_score, serialize_object_id
 
-router = APIRouter(prefix="/analysis", tags=["Analysis"])
+route = APIRouter(prefix="/analysis", tags=["Analysis"])
 
 
-@router.get('/get-analysis-report')
+@route.get('/get-analysis-report')
 def separate_users_by_category():
     response = {}
     separate_users, total_users, keyword_counts = get_analysis_report()
@@ -34,7 +34,7 @@ def separate_users_by_category():
     )
 
 
-@router.get('/get-pdf')
+@route.get('/get-pdf')
 async def get_pdf(user_id: str):
     user = get_user_by_id(user_id)
     if user:
@@ -51,7 +51,7 @@ async def get_pdf(user_id: str):
     )
 
 
-@router.get('/graph-data')
+@route.get('/graph-data')
 async def get_graph_data(tweets_id: str = None, fb_posts_id: str = None):
     x_hashtags, fb_hashtags = get_all_hashtags(tweets_id=tweets_id, fb_posts_id=fb_posts_id)
 

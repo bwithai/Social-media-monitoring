@@ -10,7 +10,7 @@ from schemas import CrawlerSchema
 from database.mongo_client import fb_collection
 from utils import serialize_object_id
 
-router = APIRouter(prefix="/fb", tags=["Facebook"])
+route = APIRouter(prefix="/fb", tags=["Facebook"])
 
 
 def json_default(obj):
@@ -19,7 +19,7 @@ def json_default(obj):
     raise TypeError
 
 
-@router.post('/fetch-fb-posts')
+@route.post('/fetch-fb-posts')
 async def fetch_fb_post(request: CrawlerSchema):
     try:
         post_data = get_fb_posts(username=request.username, days=request.days)
@@ -38,7 +38,7 @@ async def fetch_fb_post(request: CrawlerSchema):
         return JSONResponse(content={"Error": str(e)}, status_code=500)
 
 
-@router.get('/get-by-id')
+@route.get('/get-by-id')
 async def get_user(posts_id: str):
     fb_posts = get_fb_posts_by_id(posts_id)
     if fb_posts:

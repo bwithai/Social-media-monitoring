@@ -26,10 +26,10 @@ def wellcome():
     }
 
 
-app.include_router(User.router)
-app.include_router(X.router)
-app.include_router(FB.router)
-app.include_router(Analysis.router)
+app.include_router(User.route)
+app.include_router(X.route)
+app.include_router(FB.route)
+app.include_router(Analysis.route)
 
 if __name__ == "__main__":
     import uvicorn

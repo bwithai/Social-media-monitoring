@@ -9,10 +9,10 @@ from database.queries import get_all_users, add_user_to_db, get_user_by_id, get_
 from schemas import UserSchema
 from utils import serialize_object_id
 
-router = APIRouter(prefix="/user", tags=["Users"])
+route = APIRouter(prefix="/user", tags=["Users"])
 
 
-@router.post('/add-user')
+@route.post('/add-user')
 async def add_user(request: UserSchema):
     user_data = request.as_dict()
 
@@ -56,7 +56,7 @@ async def add_user(request: UserSchema):
         )
 
 
-@router.get('/get-by-id')
+@route.get('/get-by-id')
 async def get_user(user_id: str):
     user = get_user_by_id(user_id)
     if user:
@@ -70,7 +70,7 @@ async def get_user(user_id: str):
     )
 
 
-@router.delete('/delete-by-id')
+@route.delete('/delete-by-id')
 async def delete_user(user_id: str):
     user = delete_user_by_id(user_id)
     if user:
@@ -84,7 +84,7 @@ async def delete_user(user_id: str):
     )
 
 
-@router.get('/get-users')
+@route.get('/get-users')
 async def get_users():
     try:
         users = get_all_users()
