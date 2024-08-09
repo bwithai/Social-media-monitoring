@@ -23,6 +23,23 @@ target_collection = {
 }
 
 
+# Todo: --------------------------------- GENERAL ---------------------------------
+
+def create_indexing(collection, index_fields):
+    print("indexing...")
+
+    # Create indexes for the collection
+    # print("Indexing is in progress...")
+    # start_idx = time.time()
+    for field in index_fields:
+        collection.create_index([(field, pymongo.ASCENDING)])
+        collection.create_index([(field, pymongo.ASCENDING)])
+    # end_idx = time.time()
+    # print(f"Indexing Took {round(end_idx - start_idx, 2)} s.")
+
+
+# Todo: --------------------------------- User ---------------------------------
+
 # def try_this_approach():
 # try:
 # Find the user
@@ -38,101 +55,12 @@ target_collection = {
 # else:
 #     raise HTTPException(status_code=500, detail="Failed to update the user document with tweets.")
 
-def update_docs_for_tracerout(inserted_id, hop_dict):
-    filter_criteria = {"_id": inserted_id}
-
-    # Specify the update operation to add a new key-value pair
-    update_operation = {"$set": {"tracerout": hop_dict}}
-
-    # Use update_one to update a single document
-    result = connected_device_collection.update_one(filter_criteria, update_operation)
-
-    # Print the result
-    print(f"Matched {result.matched_count} document(s) and modified {result.modified_count} document(s)")
-
 
 def add_user_to_db(user):
     index_fields = ["name", "email"]
     create_indexing(user_collection, index_fields)
     result = user_collection.insert_one(user)
     return result.inserted_id
-
-
-def get_analysis_report():
-    user_projection = {"_id": 1, "analysis_report": 1, "highest_match_category": 1}
-    user_cursor = user_collection.find({}, user_projection)
-    analysis_report = list(user_cursor)
-
-    # Separate users for table view
-    separate_users = separate_users_by_category(analysis_report)
-
-    # user_count for percentage graph
-    total_users = user_collection.count_documents({})
-
-    # keyword_counts for percentage graph
-    keyword_counts = aggregate_keyword_counts(analysis_report)
-
-    return separate_users, total_users, keyword_counts
-
-
-def add_user_analysis(user_id, analysis_report):
-    try:
-        user_id_obj = ObjectId(user_id)
-        user_exists = user_collection.find_one({"_id": user_id_obj})
-
-        if not user_exists:
-            return f"User ID {user_id} not found in the database."
-
-        highest_match_category = get_highest_match_category(analysis_report)
-
-        update_result = user_collection.update_one(
-            {"_id": user_exists["_id"]},
-            {
-                "$set": {
-                    "analysis_report": analysis_report,
-                    'highest_match_category': highest_match_category
-                }
-            }
-        )
-        create_indexing(user_collection, ["analysis_report", "highest_match_category"])
-        if update_result.modified_count > 0 or update_result.upserted_id:
-            return "Analysis report has been saved to the user's document."
-        else:
-            return f"User ID {user_id} was not found in user collection."
-    except Exception as e:
-        return f"Error retrieving user for add analysis report : {str(e)}"
-
-
-def add_logs(email, logs):
-    user = user_collection.find_one({"email": email})
-    update_result = user_collection.update_one(
-        {"_id": user["_id"]},
-        {
-            "$push": {
-                "logs": logs
-            }
-        }
-    )
-    if update_result.modified_count > 0 or update_result.upserted_id:
-        print("Logs have been saved to the user's document.")
-
-
-def get_x_by_id(tweets_id):
-    try:
-        tweets = x_collection.find_one({"_id": ObjectId(tweets_id)})
-        return tweets
-    except Exception as e:
-        print(f"Error retrieving user: {e}")
-        return None
-
-
-def get_fb_posts_by_id(posts_id):
-    try:
-        fb_posts = fb_collection.find_one({"_id": ObjectId(posts_id)})
-        return fb_posts
-    except Exception as e:
-        print(f"Error retrieving user: {e}")
-        return None
 
 
 def get_user_by_id(user_id):
@@ -191,6 +119,114 @@ def get_user_by_email(email):
         return None
 
 
+def get_all_users():
+    # Define the projection
+    projection = {
+        "_id": 1,  # Exclude the _id field
+        "name": 1,
+        "email": 1,
+        # "mobile_number": 1,
+        # "address": 1,
+        # "fb_username": 1,
+        # "insta_username": 1,
+        # "x_username": 1,
+        # "hashtags": 1,
+        # Add other fields you want to retrieve
+    }
+    # Query the collection and retrieve all documents without projection
+    print("Query get_all_users is in progress...")
+    start = time.time()
+    # documents = user_collection.find({}, projection)
+    # without projection
+    documents = user_collection.find({}, projection)
+    end = time.time()
+    print(f"Query took {round(end - start, 2)} s.")
+
+    return list(documents)
+
+
+# Todo: --------------------------------- Analysis ---------------------------------
+
+def get_analysis_report():
+    user_projection = {"_id": 1, "analysis_report": 1, "highest_match_category": 1}
+    user_cursor = user_collection.find({}, user_projection)
+    analysis_report = list(user_cursor)
+
+    # Separate users for table view
+    separate_users = separate_users_by_category(analysis_report)
+
+    # user_count for percentage graph
+    total_users = user_collection.count_documents({})
+
+    # keyword_counts for percentage graph
+    keyword_counts = aggregate_keyword_counts(analysis_report)
+
+    return separate_users, total_users, keyword_counts
+
+
+def add_user_analysis(user_id, analysis_report):
+    try:
+        user_id_obj = ObjectId(user_id)
+        user_exists = user_collection.find_one({"_id": user_id_obj})
+
+        if not user_exists:
+            return f"User ID {user_id} not found in the database."
+
+        highest_match_category = get_highest_match_category(analysis_report)
+
+        update_result = user_collection.update_one(
+            {"_id": user_exists["_id"]},
+            {
+                "$set": {
+                    "analysis_report": analysis_report,
+                    'highest_match_category': highest_match_category
+                }
+            }
+        )
+        create_indexing(user_collection, ["analysis_report", "highest_match_category"])
+        if update_result.modified_count > 0 or update_result.upserted_id:
+            return "Analysis report has been saved to the user's document."
+        else:
+            return f"User ID {user_id} was not found in user collection."
+    except Exception as e:
+        return f"Error retrieving user for add analysis report : {str(e)}"
+
+
+# Todo: --------------------------------- SOCIAL MEDIA ---------------------------------
+
+
+def add_logs(email, logs):
+    user = user_collection.find_one({"email": email})
+    update_result = user_collection.update_one(
+        {"_id": user["_id"]},
+        {
+            "$push": {
+                "logs": logs
+            }
+        }
+    )
+    if update_result.modified_count > 0 or update_result.upserted_id:
+        print("Logs have been saved to the user's document.")
+
+
+def get_x_by_id(tweets_id):
+    try:
+        tweets = x_collection.find_one({"_id": ObjectId(tweets_id)})
+        return tweets
+    except Exception as e:
+        print(f"Error retrieving user: {e}")
+        return None
+
+
+def get_fb_posts_by_id(posts_id):
+    try:
+        fb_posts = fb_collection.find_one({"_id": ObjectId(posts_id)})
+        return fb_posts
+    except Exception as e:
+        print(f"Error retrieving user: {e}")
+        return None
+
+
 def add_crawler_data(request, scraped_data, crawler: str, email: str):
     # Check if the user exists
     try:
@@ -228,9 +264,6 @@ def add_crawler_data(request, scraped_data, crawler: str, email: str):
                 return f"{request.days} day Tweets inserted successfully"
     except (ServerSelectionTimeoutError, ConnectionFailure) as db_error:
         return db_error
-
-
-from bson import ObjectId
 
 
 def get_crawlers_ids(user_id):
@@ -342,32 +375,6 @@ def get_hashtags():
     return hashtags
 
 
-def get_all_users():
-    # Define the projection
-    projection = {
-        "_id": 1,  # Exclude the _id field
-        "name": 1,
-        "email": 1,
-        "mobile_number": 1,
-        "address": 1,
-        "fb_username": 1,
-        "insta_username": 1,
-        "x_username": 1,
-        "hashtags": 1,
-        # Add other fields you want to retrieve
-    }
-    # Query the collection and retrieve all documents without projection
-    print("Query get_all_users is in progress...")
-    start = time.time()
-    # documents = user_collection.find({}, projection)
-    # without projection
-    documents = user_collection.find()
-    end = time.time()
-    print(f"Query took {round(end - start, 2)} s.")
-
-    return list(documents)
-
-
 def get_all_tweets():
     # Query the collection and retrieve all documents without projection
     print("Query get_all_tweets is in progress...")
@@ -414,6 +421,20 @@ def get_pc_from_db(system_uuid, current_page):
     end = time.time()
     print(f"Query took {round(end - start, 2)} s.")
     return result
+
+
+# Todo: --------------------------------- Not Related ---------------------------------
+def update_docs_for_tracerout(inserted_id, hop_dict):
+    filter_criteria = {"_id": inserted_id}
+
+    # Specify the update operation to add a new key-value pair
+    update_operation = {"$set": {"tracerout": hop_dict}}
+
+    # Use update_one to update a single document
+    result = connected_device_collection.update_one(filter_criteria, update_operation)
+
+    # Print the result
+    print(f"Matched {result.matched_count} document(s) and modified {result.modified_count} document(s)")
 
 
 def get_latest_unique_pcs():
@@ -481,19 +502,6 @@ def get_documents_in_time_range(minutes):
     documents = list(result)
 
     return documents
-
-
-def create_indexing(collection, index_fields):
-    print("indexing...")
-
-    # Create indexes for the collection
-    # print("Indexing is in progress...")
-    # start_idx = time.time()
-    for field in index_fields:
-        collection.create_index([(field, pymongo.ASCENDING)])
-        collection.create_index([(field, pymongo.ASCENDING)])
-    # end_idx = time.time()
-    # print(f"Indexing Took {round(end_idx - start_idx, 2)} s.")
 
 
 def find_column_name_not_empty(name, collection):

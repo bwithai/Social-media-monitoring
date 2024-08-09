@@ -15,11 +15,13 @@ def separate_users_by_category():
     response = {}
     separate_users, total_users, keyword_counts = get_analysis_report()
     if total_users:
+        categorized_percentage = {}
         for category, users in separate_users.items():
             separate_users[category] = len(users)
+            categorized_percentage[category] = len(users)/total_users * 100
 
         response['categorized_severity'] = separate_users
-        response['candidates'] = total_users
+        response['categorized_percentage'] = categorized_percentage
         response['keyword_counts'] = keyword_counts
 
         return JSONResponse(
