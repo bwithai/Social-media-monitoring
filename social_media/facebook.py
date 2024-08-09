@@ -58,8 +58,9 @@ def get_fb_posts(username, days=30):
                             driver.execute_script("arguments[0].scrollIntoView(true);", see_more_button)
                             driver.execute_script("arguments[0].click();", see_more_button)
                         except (
-                        NoSuchElementException, ElementClickInterceptedException, ElementNotInteractableException) as e:
-                            print(f"Current post have no (See more) button")
+                                NoSuchElementException, ElementClickInterceptedException,
+                                ElementNotInteractableException) as e:
+                            print('', end='')
                             # pass  # Continue if no "See more" button or unable to click
 
                         description = post.text.strip()
@@ -82,7 +83,7 @@ def get_fb_posts(username, days=30):
                         images = post.find_elements(By.CSS_SELECTOR, "img")
                         post_images = [img.get_attribute('src') for img in images if
                                        'emoji' not in img.get_attribute('src') and 'https://' in img.get_attribute(
-                                           'src')]
+                                           'src') and 'profile_images' not in img.get_attribute('src')]
 
                         hashtags = [part for part in description.split() if part.startswith('#')]
 
@@ -131,7 +132,6 @@ def get_fb_posts(username, days=30):
 
     driver.quit()
     return collected_data
-
 
 # Call the function to get Facebook posts
 # get_fb_posts("bookaholicsco", 2){person_comment_text}

@@ -33,7 +33,12 @@ sudo docker start mongodb
 # pull
 sudo docker pull rabbitmq:3-management 
 # start
-sudo docker run -d --rm --name rabbitmq -p 15672:15672 -p 5672:5672 rabbitmq:3-management
-# stop
+sudo docker run -d --name rabbitmq -p 15672:15672 -p 5672:5672 rabbitmq:3-management# stop
 sudo docker stop rabbitmq
+```
+
+### Dev
+```bash
+sudo docker start rabbitmq 
+sudo docker start mongodb
 ```

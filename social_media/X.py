@@ -65,7 +65,7 @@ def get_tweets(username, days=30):
                 # Filter out unnecessary images
                 tweet_images = [img.get_attribute('src') for img in images if
                                 'emoji' not in img.get_attribute(
-                                    'src')]  # and 'profile_images' not in img.get_attribute('src')]
+                                    'src') and 'profile_images' not in img.get_attribute('src')]
 
                 # Get video URLs
                 tweet_videos = [video.get_attribute('src') for video in videos if video.get_attribute('src')]
@@ -96,7 +96,7 @@ def get_tweets(username, days=30):
                 reposted = 'reposted' in tweet_text
 
                 tweet_data = {
-                    'original_tweet_text': tweet_text,
+                    'original_description': tweet_text,
                     'tweet': clean_tweet_text(tweet_text),
                     'images': tweet_images,
                     'videos': tweet_videos,

@@ -17,3 +17,8 @@ server.pfx
 user_report.pdf
 output.pdf
 styled_pdf_example.pdf
+fonts
+test_query.pdf
+Analysis.pdf
+database/pdf_db
+test_new_logic.py

@@ -6,8 +6,9 @@ import pika
 
 from social_media.facebook import get_fb_posts
 from social_media.X import get_tweets
-from database.queries import add_crawler_data, add_logs
+from database.queries import add_crawler_data, add_logs, get_post_caption, get_crawlers_ids
 from schemas import CrawlerSchema
+from social_media.media_utils.analysis import generate_pdf
 
 
 # Context manager class
@@ -54,10 +55,34 @@ class RabbitMQConnection:
 def callback(ch, method, properties, body):
     print("Received message:")
     user = json.loads(body)
+    user_id = user['_id']
     # pprint.pprint(user)
     # print('-' * 80)
     # print('_' * 80)
+    print('rabbitmq: ----------------------------------------------')
+    print('rabbitmq: crawling started')
     start_crawling(user)
+    print('rabbitmq: crawling completed {fetch crawls ids}')
+    user_crawlers = get_crawlers_ids(user_id)
+
+    tweets, fb_posts = get_post_caption(user_crawlers['x_id'], user_crawlers['fb_id'])
+    data = {}
+    if tweets:
+        data = {'tweets': tweets}
+    if fb_posts:
+        data = {'fb_posts': fb_posts}
+    categories_keywords = {
+        'religious': ['Allāh', 'Islam', 'pray', 'faith', 'spiritual', 'mosque', 'Quran'],
+        'political': ['bombardment', 'Gaza', 'liberalism', 'racism', 'superiority', 'election', 'democracy'],
+        'open_minded': ['tolerance', 'diversity', 'equality', 'freedom', 'inclusivity', 'acceptance'],
+        'technology': ['AI', 'blockchain', 'cybersecurity', 'innovation', 'programming'],
+        'health': ['wellness', 'nutrition', 'exercise', 'mental health', 'therapy']
+    }
+    if 'tweets' in data or 'fb_posts' in data:
+        generate_pdf(data, categories_keywords, output_file=f'{user_id}.pdf')
+    else:
+        add_logs(user['email'], 'PDF Report\n\t- Message: no tweets and fb_posts available in database')
+    print('rabbitmq: ----------------------------------------------')
 
 
 def start_crawling(user):
