@@ -51,6 +51,9 @@ class RabbitMQConnection:
         self.connection.close()
 
 
+social_media_keys = ['tweets_id', 'fb_posts_id', 'insta_posts_id', 'tiktok_posts_id']
+
+
 # Callback function to process the messages
 def callback(ch, method, properties, body):
     print("Received message:")
@@ -63,14 +66,9 @@ def callback(ch, method, properties, body):
     print('rabbitmq: crawling started')
     start_crawling(user)
     print('rabbitmq: crawling completed {fetch crawls ids}')
-    user_crawlers = get_crawlers_ids(user_id)
+    social_media_ids = get_crawlers_ids(user_id, social_media_keys)
 
-    tweets, fb_posts = get_post_caption(user_crawlers['x_id'], user_crawlers['fb_id'])
-    data = {}
-    if tweets:
-        data = {'tweets': tweets}
-    if fb_posts:
-        data = {'fb_posts': fb_posts}
+    caption = get_post_caption(social_media_ids)
     categories_keywords = {
         'religious': ['Allāh', 'Islam', 'pray', 'faith', 'spiritual', 'mosque', 'Quran'],
         'political': ['bombardment', 'Gaza', 'liberalism', 'racism', 'superiority', 'election', 'democracy'],
@@ -78,8 +76,8 @@ def callback(ch, method, properties, body):
         'technology': ['AI', 'blockchain', 'cybersecurity', 'innovation', 'programming'],
         'health': ['wellness', 'nutrition', 'exercise', 'mental health', 'therapy']
     }
-    if 'tweets' in data or 'fb_posts' in data:
-        generate_pdf(data, categories_keywords, output_file=f'{user_id}.pdf')
+    if 'tweets' in caption or 'fb_posts' in caption:
+        generate_pdf(caption, categories_keywords, output_file=f'{user_id}.pdf')
     else:
         add_logs(user['email'], 'PDF Report\n\t- Message: no tweets and fb_posts available in database')
     print('rabbitmq: ----------------------------------------------')

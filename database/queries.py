@@ -266,48 +266,79 @@ def add_crawler_data(request, scraped_data, crawler: str, email: str):
         return db_error
 
 
-def get_crawlers_ids(user_id):
+def get_crawlers_ids(user_id, social_media_keys):
     user = user_collection.find_one({"_id": ObjectId(user_id)})
     if not user:
         print("User not found from communication")
         return None
-    else:
-        query = {"_id": ObjectId(user_id)} if user_id else {}
-        user_cursor = list(user_collection.find(query, {"_id": 0, "crawler": 1}))
 
-        user_data = user_cursor[0]['crawler']
+    # Fetch the user document and extract the 'crawler' field
+    user_cursor = list(user_collection.find({"_id": ObjectId(user_id)}, {"_id": 0, "crawler": 1}))
+    if not user_cursor:
+        print("User data not found in the database")
+        return None
 
-        x_id = user_data.get('X', {}).get('tweets_id', None)
-        fb_id = user_data.get('facebook', {}).get('fb_posts_id', None)
+    user_data = user_cursor[0].get('crawler', {})
 
-        return {'x_id': x_id, 'fb_id': fb_id}
+    # Create a dictionary to store all social media IDs
+    social_media_ids = {}
+    for key, value in user_data.items():
+        if isinstance(value, dict):
+            for id_key in social_media_keys:
+                if id_key in value:
+                    social_media_ids[id_key] = value[id_key]
+                    break  # Assuming each key has only one ID, break after finding the first match
+
+    return social_media_ids
 
 
-def get_post_caption(tweets_id=None, fb_posts_id=None):
-    # Validate if the IDs exist in the database
-    tweet_captions = None
-    fb_post_captions = None
-    if tweets_id:
-        if not x_collection.find_one({"_id": ObjectId(tweets_id)}):
-            print(f"Tweet ID {tweets_id} not found in the database.")
-            tweet_captions = None
-        else:
-            x_query = {"_id": ObjectId(tweets_id)} if tweets_id else {}
-            x_projection = {"_id": 0, "tweets.original_description": 1, "tweets.images": 1, "tweets.links": 1}
-            x_cursor = x_collection.find(x_query, x_projection)
-            tweet_captions = list(x_cursor)[0]['tweets']
+def get_post_caption(social_media_ids):
+    captions = {}
 
-    if fb_posts_id:
-        if not fb_collection.find_one({"_id": ObjectId(fb_posts_id)}):
-            print(f"Facebook Post ID {fb_posts_id} not found in the database.")
-            fb_post_captions = None
-        else:
-            fb_query = {"_id": ObjectId(fb_posts_id)} if fb_posts_id else {}
-            fb_projection = {"_id": 0, "fb_posts.original_description": 1, "fb_posts.images": 1, "fb_posts.links": 1}
-            fb_cursor = fb_collection.find(fb_query, fb_projection)
-            fb_post_captions = list(fb_cursor)[0]['fb_posts']
+    # Define database queries and projections for different social media platforms
+    queries = {
+        'tweets_id': {
+            'collection': x_collection,
+            'projection': {"_id": 0, "tweets.original_description": 1, "tweets.images": 1, "tweets.links": 1},
+            'key': 'tweets'
+        },
+        'fb_posts_id': {
+            'collection': fb_collection,
+            'projection': {"_id": 0, "fb_posts.original_description": 1, "fb_posts.images": 1, "fb_posts.links": 1},
+            'key': 'fb_posts'
+        },
+        'insta_posts_id': {
+            'collection': insta_collection,  # Assuming you have an insta_collection
+            'projection': {"_id": 0, "insta_posts.original_description": 1, "insta_posts.images": 1,
+                           "insta_posts.links": 1},
+            'key': 'insta_posts'
+        },
+        # 'tiktok_posts_id': {
+        #     'collection': tiktok_collection,  # Assuming you have a tiktok_collection
+        #     'projection': {"_id": 0, "tiktok_posts.original_description": 1, "tiktok_posts.images": 1, "tiktok_posts.links": 1},
+        #     'key': 'tiktok_posts'
+        # }
+    }
 
-    return tweet_captions, fb_post_captions
+    for id_type, id_value in social_media_ids.items():
+        if id_type in queries:
+            collection = queries[id_type]['collection']
+            projection = queries[id_type]['projection']
+            post_key = queries[id_type]['key']
+
+            if not collection.find_one({"_id": ObjectId(id_value)}):
+                print(f"{id_type} ID {id_value} not found in the database.")
+                captions[post_key] = None
+            else:
+                query = {"_id": ObjectId(id_value)}
+                cursor = collection.find(query, projection)
+                document = list(cursor)
+                if document:
+                    captions[post_key] = document[0].get(post_key, None)
+                else:
+                    captions[post_key] = None
+
+    return captions
 
 
 def get_all_hashtags(tweets_id=None, fb_posts_id=None):
