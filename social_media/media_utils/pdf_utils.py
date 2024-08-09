@@ -185,10 +185,14 @@ def generate_chart(results):
     # Set a style
     sns.set(style="whitegrid")
 
-    plt.figure(figsize=(6, 6))  # Size for better readability
-    barplot = sns.barplot(data=data, y='Keywords', x='Severity Score', palette="viridis", hue='Keywords', dodge=False)
+    # Adjust figure size for better bar width
+    plt.figure(figsize=(6, len(keywords) * 0.5))  # Increase height for more keywords, width for narrower bars
 
-    plt.ylabel('', )
+    # Assign y variable to hue and set legend=False to avoid deprecation warning
+    barplot = sns.barplot(data=data, y='Keywords', x='Severity Score', palette="viridis", hue='Keywords', dodge=False,
+                          legend=False)
+
+    plt.ylabel('')
     plt.xlabel('')
 
     # Add value labels at the end of each bar and color them
@@ -200,19 +204,16 @@ def generate_chart(results):
     for label, bar in zip(barplot.get_yticklabels(), barplot.patches):
         label.set_color(bar.get_facecolor())
 
-    # Remove legend
-    plt.legend([], [], frameon=False)
-
     # Increase space on x-axis
     xlim = plt.xlim()
     plt.xlim(xlim[0], xlim[1] + 1)  # Extend the x-axis limit
 
     # Add grid lines
-    barplot.xaxis.grid(True, color='gray', linestyle='dashed', linewidth=0.5)
+    barplot.xaxis.grid(False)
     barplot.yaxis.grid(True, color='gray', linestyle='dashed', linewidth=0.5)
 
-    # Adjust layout
-    plt.tight_layout()
+    # Adjust layout to ensure all borders are visible
+    plt.tight_layout(rect=[0, 0, 1, 1])
 
     # Save the plot to a buffer
     buf = io.BytesIO()

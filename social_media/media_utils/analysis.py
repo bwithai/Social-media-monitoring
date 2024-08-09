@@ -69,6 +69,7 @@ def generate_pdf(data, categories_keywords, output_file='Analysis.pdf'):
                 margin: 20px 0;
                 padding: 10px 0;
                 border-bottom: 1px solid #eee;
+                background: #f9f9f9;
             }
             .tweet, .post {
                 border: 1px solid #ddd;
