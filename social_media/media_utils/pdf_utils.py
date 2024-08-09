@@ -136,23 +136,25 @@ def analyse_severity(data, categories_keywords):
     category_counts = {category: Counter() for category in categories_keywords}
     highlighted_tweets = []
 
-    for tweet in data['tweets']:
-        tweet_text = tweet['original_description']
-        highlighted_text = tweet_text
-        for category, keywords in categories_keywords.items():
-            counts, highlighted_text = count_and_highlight_keywords(highlighted_text, keywords)
-            category_counts[category].update(counts)
-            tweet['original_description'] = highlighted_text
-        highlighted_tweets.append(highlighted_text)
+    if 'tweets' in data:
+        for tweet in data['tweets']:
+            tweet_text = tweet['original_description']
+            highlighted_text = tweet_text
+            for category, keywords in categories_keywords.items():
+                counts, highlighted_text = count_and_highlight_keywords(highlighted_text, keywords)
+                category_counts[category].update(counts)
+                tweet['original_description'] = highlighted_text
+            highlighted_tweets.append(highlighted_text)
 
-    for post in data['fb_posts']:
-        post_text = post['original_description']
-        highlighted_text = post_text
-        for category, keywords in categories_keywords.items():
-            counts, highlighted_text = count_and_highlight_keywords(highlighted_text, keywords)
-            category_counts[category].update(counts)
-            post['original_description'] = highlighted_text
-        highlighted_tweets.append(highlighted_text)
+    if 'fb_posts' in data:
+        for post in data['fb_posts']:
+            post_text = post['original_description']
+            highlighted_text = post_text
+            for category, keywords in categories_keywords.items():
+                counts, highlighted_text = count_and_highlight_keywords(highlighted_text, keywords)
+                category_counts[category].update(counts)
+                post['original_description'] = highlighted_text
+            highlighted_tweets.append(highlighted_text)
 
     # Calculate unique keyword matches and category scores
     category_scores = {

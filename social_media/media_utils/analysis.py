@@ -248,30 +248,31 @@ def generate_pdf(data, categories_keywords, output_file='Analysis.pdf'):
                 <h3>Subsection 1.1: Keyword Analysis</h3>
     """
 
-    for tweet in data['tweets']:
-        tweet_text = tweet['original_description']
-        tweet_images = tweet.get('images', [])
-        tweet_links = tweet.get('links', [])
-        # highlighted_tweet_text = tweet_text.replace(keyword, f"<span style='color:blue;'>{keyword}</span>")
+    if 'tweets' in data:
+        for tweet in data['tweets']:
+            tweet_text = tweet['original_description']
+            tweet_images = tweet.get('images', [])
+            tweet_links = tweet.get('links', [])
+            # highlighted_tweet_text = tweet_text.replace(keyword, f"<span style='color:blue;'>{keyword}</span>")
 
-        html_content += f"""
-                <div class='tweet{' highlight' if keyword_highlighter in tweet_text else ''}'>
-                    <div class='tweet-content'>{tweet_text}</div>
-        """
+            html_content += f"""
+                    <div class='tweet{' highlight' if keyword_highlighter in tweet_text else ''}'>
+                        <div class='tweet-content'>{tweet_text}</div>
+            """
 
-        if tweet_images:
-            html_content += "<div class='images-section'><h4>Images</h4>"
-            for image_url in tweet_images:
-                html_content += f"<img src='{image_url}' class='image'/>"
+            if tweet_images:
+                html_content += "<div class='images-section'><h4>Images</h4>"
+                for image_url in tweet_images:
+                    html_content += f"<img src='{image_url}' class='image'/>"
+                html_content += "</div>"
+
+            if tweet_links:
+                html_content += "<div class='links-section'><h4>Links</h4><ul>"
+                for link in tweet_links:
+                    html_content += f"<li><a href='{link}'>{link}</a></li>"
+                html_content += "</ul></div>"
+
             html_content += "</div>"
-
-        if tweet_links:
-            html_content += "<div class='links-section'><h4>Links</h4><ul>"
-            for link in tweet_links:
-                html_content += f"<li><a href='{link}'>{link}</a></li>"
-            html_content += "</ul></div>"
-
-        html_content += "</div>"
 
     html_content += """
             </div>
@@ -280,30 +281,31 @@ def generate_pdf(data, categories_keywords, output_file='Analysis.pdf'):
                 <h3>Subsection 2.1: Post Analysis</h3>
     """
 
-    for post in data['fb_posts']:
-        post_text = post['original_description']
-        post_images = post.get('images', [])
-        post_links = post.get('links', [])
-        # highlighted_post_text = post_text.replace(keyword, f"<span style='color:blue;'>{keyword}</span>")
+    if 'fb_posts' in data:
+        for post in data['fb_posts']:
+            post_text = post['original_description']
+            post_images = post.get('images', [])
+            post_links = post.get('links', [])
+            # highlighted_post_text = post_text.replace(keyword, f"<span style='color:blue;'>{keyword}</span>")
 
-        html_content += f"""
-                <div class='post{' highlight' if keyword_highlighter in post_text else ''}'>
-                    <div class='post-content'>{post_text}</div>
-        """
+            html_content += f"""
+                    <div class='post{' highlight' if keyword_highlighter in post_text else ''}'>
+                        <div class='post-content'>{post_text}</div>
+            """
 
-        if post_images:
-            html_content += "<div class='images-section'><h4>Images</h4>"
-            for image_url in post_images:
-                html_content += f"<img src='{image_url}' class='image'/>"
+            if post_images:
+                html_content += "<div class='images-section'><h4>Images</h4>"
+                for image_url in post_images:
+                    html_content += f"<img src='{image_url}' class='image'/>"
+                html_content += "</div>"
+
+            if post_links:
+                html_content += "<div class='links-section'><h4>Links</h4><ul>"
+                for link in post_links:
+                    html_content += f"<li><a href='{link}'>{link}</a></li>"
+                html_content += "</ul></div>"
+
             html_content += "</div>"
-
-        if post_links:
-            html_content += "<div class='links-section'><h4>Links</h4><ul>"
-            for link in post_links:
-                html_content += f"<li><a href='{link}'>{link}</a></li>"
-            html_content += "</ul></div>"
-
-        html_content += "</div>"
 
     html_content += f"""
             </div>

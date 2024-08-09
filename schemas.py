@@ -22,9 +22,9 @@ class UserSchema(BaseModel):
     def as_dict(self) -> dict:
         user_dict = self.dict()
         user_dict["crawler"] = {
-            "X": [],
-            "Instagram": [],
-            "facebook": []
+            "X": {},
+            "Instagram": {},
+            "facebook": {}
         }
         return user_dict
 

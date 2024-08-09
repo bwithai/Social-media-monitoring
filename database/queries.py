@@ -38,7 +38,7 @@ def create_indexing(collection, index_fields):
     # print(f"Indexing Took {round(end_idx - start_idx, 2)} s.")
 
 
-# Todo: --------------------------------- User ---------------------------------
+# Todo: --------------------------------- User MODULE ---------------------------------
 
 # def try_this_approach():
 # try:
@@ -251,7 +251,7 @@ def add_crawler_data(request, scraped_data, crawler: str, email: str):
                 user_collection.update_one(
                     {"_id": user["_id"]},
                     {
-                        "$push": {
+                        "$set": {
                             f"crawler.{key}": {
                                 f"{value}_id": insert_result.inserted_id,
                                 "scraped_at": current_timestamp
@@ -267,13 +267,19 @@ def add_crawler_data(request, scraped_data, crawler: str, email: str):
 
 
 def get_crawlers_ids(user_id):
-    if not user_collection.find_one({"_id": ObjectId(user_id)}):
+    user = user_collection.find_one({"_id": ObjectId(user_id)})
+    if not user:
         print("User not found from communication")
+        return None
     else:
         query = {"_id": ObjectId(user_id)} if user_id else {}
         user_cursor = list(user_collection.find(query, {"_id": 0, "crawler": 1}))
-        x_id = user_cursor[0]['crawler']['X'][0]['tweets_id']
-        fb_id = user_cursor[0]['crawler']['facebook'][0]['fb_posts_id']
+
+        user_data = user_cursor[0]['crawler']
+
+        x_id = user_data.get('X', {}).get('tweets_id', None)
+        fb_id = user_data.get('facebook', {}).get('fb_posts_id', None)
+
         return {'x_id': x_id, 'fb_id': fb_id}
 
 
